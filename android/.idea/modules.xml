@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/android.iml" filepath="$PROJECT_DIR$/.idea/modules/android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/android.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/android.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/1797939816/android.audio_service.iml" filepath="$PROJECT_DIR$/.idea/modules/1797939816/android.audio_service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/1601086629/android.audio_session.iml" filepath="$PROJECT_DIR$/.idea/modules/1601086629/android.audio_session.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/-623776001/android.just_audio.iml" filepath="$PROJECT_DIR$/.idea/modules/-623776001/android.just_audio.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/-320315767/android.path_provider_android.iml" filepath="$PROJECT_DIR$/.idea/modules/-320315767/android.path_provider_android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/1299018731/android.sqflite.iml" filepath="$PROJECT_DIR$/.idea/modules/1299018731/android.sqflite.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/1351742157/android.url_launcher_android.iml" filepath="$PROJECT_DIR$/.idea/modules/1351742157/android.url_launcher_android.iml" />
+    </modules>
+  </component>
+</project>
