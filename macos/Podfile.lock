@@ -3,6 +3,8 @@ PODS:
     - FlutterMacOS
   - audio_session (0.0.1):
     - FlutterMacOS
+  - audioplayers (0.0.1):
+    - FlutterMacOS
   - catcher (0.0.1):
     - FlutterMacOS
   - device_info_plus_macos (0.0.1):
@@ -26,6 +28,7 @@ PODS:
 DEPENDENCIES:
   - audio_service (from `Flutter/ephemeral/.symlinks/plugins/audio_service/macos`)
   - audio_session (from `Flutter/ephemeral/.symlinks/plugins/audio_session/macos`)
+  - audioplayers (from `Flutter/ephemeral/.symlinks/plugins/audioplayers/macos`)
   - catcher (from `Flutter/ephemeral/.symlinks/plugins/catcher/macos`)
   - device_info_plus_macos (from `Flutter/ephemeral/.symlinks/plugins/device_info_plus_macos/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
@@ -44,6 +47,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/audio_service/macos
   audio_session:
     :path: Flutter/ephemeral/.symlinks/plugins/audio_session/macos
+  audioplayers:
+    :path: Flutter/ephemeral/.symlinks/plugins/audioplayers/macos
   catcher:
     :path: Flutter/ephemeral/.symlinks/plugins/catcher/macos
   device_info_plus_macos:
@@ -64,6 +69,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   audio_service: b88ff778e0e3915efd4cd1a5ad6f0beef0c950a9
   audio_session: dea1f41890dbf1718f04a56f1d6150fd50039b72
+  audioplayers: 8b48e22684b6e0d9df143b2d1bbd61dca9dab6b4
   catcher: dc8ecb9a4d3e6e36bd403cd34e13673f7ed7ca70
   device_info_plus_macos: 1ad388a1ef433505c4038e7dd9605aadd1e2e9c7
   FlutterMacOS: ae6af50a8ea7d6103d888583d46bd8328a7e9811

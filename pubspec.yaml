@@ -29,7 +29,8 @@ dependencies:
   file_manager: ^1.0.0
   awesome_snackbar_content:
   catcher: ^0.6.9
-   
+  fluttertoast: ^8.0.7
+  audioplayers: ^0.19.1
   
  
 dev_dependencies:
@@ -42,7 +43,10 @@ flutter:
   uses-material-design: true
   assets:
     - images/vasis.jpeg
-    - images/kartal.jpeg
+    - images/k.png
+    - images/km.png
+    - images/kmt.png
+    - images/appicon.png
 
 flutter_icons:
   android: true
