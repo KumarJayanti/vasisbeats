@@ -85,12 +85,12 @@ class _MyAppState extends State<MyApp> {
     bool toDownloadZip = false;
     if (fileExists) {
       //print("last_updated file already exists");
-      File file = await File('$_dir/last_updated.txt');
-      currentDate = await file.readAsString();
+      File current = await File('$_dir/last_updated.txt');
+      currentDate = await current.readAsString();
       //print("currentDate=" + currentDate);
       var lastUpdated =
           await _downloadFile(_last_updated, _localUpdatedFileName);
-      String latestDate = await file.readAsString();
+      String latestDate = await lastUpdated.readAsString();
       //print("latestDate=" + latestDate);
       if (latestDate.compareTo(currentDate) > 0) {
         //print("latestDate date is greater than currentDate");
