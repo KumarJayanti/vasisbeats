@@ -3,8 +3,9 @@ class BeatsData {
   String? _album;
   String? _title;
   String? _url;
+  String? _genre;
 
-  BeatsData({String? id, String? album, String? title, String? url}) {
+  BeatsData({String? id, String? album, String? title, String? url, String? genre}) {
     if (id != null) {
       this._id = id;
     }
@@ -17,6 +18,9 @@ class BeatsData {
     if (url != null) {
       this._url = url;
     }
+    if (genre != null) {
+      this._genre = genre;
+    }
   }
 
   String? get id => _id;
@@ -27,12 +31,16 @@ class BeatsData {
   set title(String? title) => _title = title;
   String? get url => _url;
   set url(String? url) => _url = url;
+  String? get genre => _genre;
+  set genre(String? genre) => _genre = genre;
+
 
   BeatsData.fromJson(Map<String, dynamic> json) {
     _id = json['id'];
     _album = json['album'];
     _title = json['title'];
     _url = json['url'];
+    _genre = json['genre'];
   }
 
   Map<String, dynamic> toJson() {
@@ -41,6 +49,7 @@ class BeatsData {
     data['album'] = this._album;
     data['title'] = this._title;
     data['url'] = this._url;
+    data['genre'] = this._genre;
     return data;
   }
 }

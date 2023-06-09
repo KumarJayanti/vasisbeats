@@ -43,6 +43,7 @@ class PageManager {
               album: song['album'] ?? '',
               title: song['title'] ?? '',
               extras: {'url': song['url']},
+              genre: song['genre'] ?? '',
             ))
         .toList();
     _audioHandler.addQueueItems(mediaItems);
@@ -184,6 +185,7 @@ class PageManager {
       album: song['album'] ?? '',
       title: song['title'] ?? '',
       extras: {'url': song['url']},
+      genre: song['genre'] ?? '',
     );
     int size = await _audioHandler.queue.value.length;
     
