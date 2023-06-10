@@ -1,8 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
 import 'main.dart';
+import 'package:provider/provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -35,96 +35,86 @@ class _SplashScreenState extends State<SplashScreen> {
   ];
 
   static const colorizeTextStyle = TextStyle(
-    fontSize: 30.0,
+    fontSize: 20.0,
     fontFamily: 'Horizon',
   );
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-          decoration: BoxDecoration(
+    return Consumer<DownloadProgress>(
+      builder: (context, downloadProgress, _) {
+        final percent = downloadProgress.percentDownloaded * 100;
+        //print(downloadProgress.percentDownloaded);
+        return Scaffold(
+          body: Container(
+            decoration: BoxDecoration(
               image: DecorationImage(
-                  image: AssetImage("images/vasis.jpeg"), fit: BoxFit.cover)),
-          child: Center(
+                image: AssetImage('images/vasis.jpeg'),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Center(
               child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              DefaultTextStyle(
-                style: const TextStyle(
-                  fontSize: 20.0,
-                ),
-                child: AnimatedTextKit(
-                  animatedTexts: [
-                    ColorizeAnimatedText(
-                      'Vasis Studio Beats',
-                      textStyle: colorizeTextStyle,
-                      colors: colorizeColors,
-                    )
-                  ],
-                  isRepeatingAnimation: true,
-                  onTap: () {
-                    print("Tap Event");
-                  },
-                ),
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              Center(
-                child: SizedBox(
-                  width: 100,
-                  height: 100,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 10,
-                    value: null,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                
+                  DefaultTextStyle(
+                    style: const TextStyle(
+                      fontSize: 20.0,
+                    ),
+                    child: AnimatedTextKit(
+                      animatedTexts: [
+                        ColorizeAnimatedText(
+                          'Downloading Beats Files...',
+                          textStyle: colorizeTextStyle,
+                          colors: colorizeColors,
+                        )
+                      ],
+                      isRepeatingAnimation: true,
+                      onTap: () {
+                        print("Tap Event");
+                      },
+                    ),
                   ),
-                ),
+                  SizedBox(height: 16),
+                  Container(
+                    width: 200,
+                    child: LinearProgressIndicator(
+                      value: percent / 100,
+                      minHeight: 10,
+                      backgroundColor: Colors.grey[300],
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '${percent.toStringAsFixed(1)}% Downloaded',
+                    style: TextStyle(fontSize: 16, color: Colors.blue),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  DefaultTextStyle(
+                    style: const TextStyle(
+                      fontSize: 15.0,
+                    ),
+                    child: AnimatedTextKit(
+                      animatedTexts: [
+                        WavyAnimatedText('__/\\o_ Kirtan For Life _o/\\__',
+                            textStyle: TextStyle(color: Colors.purple)),
+                      ],
+                      isRepeatingAnimation: true,
+                      onTap: () {
+                        print("Tap Event");
+                      },
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(
-                height: 20,
-              ),
-              /*Text(
-                'Downloading beats...',
-                style: TextStyle(color: Colors.purple, fontSize: 20),
-              ),*/
-              DefaultTextStyle(
-                style: const TextStyle(
-                  fontSize: 10.0,
-                ),
-                child: AnimatedTextKit(
-                  animatedTexts: [
-                    ColorizeAnimatedText(
-                      'Downloading Beats Files',
-                      textStyle: colorizeTextStyle,
-                      colors: colorizeColors,
-                    )
-                  ],
-                  isRepeatingAnimation: true,
-                  onTap: () {
-                    print("Tap Event");
-                  },
-                ),
-              ),
-               SizedBox(
-                height: 20,
-              ),
-              DefaultTextStyle(
-                style: const TextStyle(
-                  fontSize: 20.0,
-                ),
-                child: AnimatedTextKit(
-                  animatedTexts: [
-                    WavyAnimatedText('__/\\o_ Kirtan For Life _o/\\__', textStyle: TextStyle(color: Colors.purple)),
-                  ],
-                  isRepeatingAnimation: true,
-                  onTap: () {
-                    print("Tap Event");
-                  },
-                ),
-              ),
-            ],
-          ))),
+            ),
+          ),
+        );
+      },
     );
   }
 }

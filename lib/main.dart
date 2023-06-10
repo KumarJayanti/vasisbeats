@@ -16,7 +16,11 @@ import 'package:item_selector/item_selector.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:catcher/catcher.dart';
 
+import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart';
+
 void main() async {
+  
   CatcherOptions debugOptions =
       CatcherOptions(PageReportMode(showStackTrace: true), [
     EmailManualHandler(["kumar.jayanti@gmail.com"])
@@ -27,16 +31,30 @@ void main() async {
       CatcherOptions(PageReportMode(showStackTrace: true), [
     EmailManualHandler(["kumar.jayanti@gmail.com"])
   ]);
+  
 
   await setupServiceLocator();
 
-  /// STEP 2. Pass your root widget (MyApp) along with Catcher configuration:
-  Catcher(
-      rootWidget: MyApp(),
-      debugConfig: debugOptions,
-      releaseConfig: releaseOptions);
 
-  //runApp(MyApp());
+  Catcher(
+    rootWidget: ChangeNotifierProvider(
+      create: (_) => DownloadProgress(),
+      child: MyApp(),
+    ),
+    debugConfig: debugOptions,
+    releaseConfig: releaseOptions,
+  );
+}
+
+class DownloadProgress extends ChangeNotifier {
+  double _percentDownloaded = 0.0;
+
+  double get percentDownloaded => _percentDownloaded;
+
+  void updateProgress(double value) {
+    _percentDownloaded = value;
+    notifyListeners();
+  }
 }
 
 class MyApp extends StatefulWidget {
@@ -135,6 +153,29 @@ class _MyAppState extends State<MyApp> {
     return file.writeAsBytes(req.bodyBytes);
   }
 
+
+  Future<File> _downloadZippedFile(String url, String fileName) async {
+    final req = await http.Client().send(http.Request('GET', Uri.parse(url)));
+    final file = File('$_dir/$fileName');
+    final responseStream = req.stream;
+    final totalBytes = req.contentLength ?? 0;
+    var bytesDownloaded = 0;
+
+    final fileSink = file.openWrite();
+
+    await for (final chunk in responseStream) {
+      bytesDownloaded += chunk.length;
+      fileSink.add(chunk);
+      final progress = bytesDownloaded / totalBytes;
+      Provider.of<DownloadProgress>(context, listen: false)
+          .updateProgress(progress);
+    }
+
+    await fileSink.close();
+    return file;
+  }
+
+
   Future<void> _downloadZip() async {
     if (_downloading) {
       return;
@@ -154,7 +195,7 @@ class _MyAppState extends State<MyApp> {
     }
     */
 
-    var zippedFile = await _downloadFile(_zipPath, _localZipFileName);
+    var zippedFile = await _downloadZippedFile(_zipPath, _localZipFileName);
     //print(zippedFile.path);
     await unarchiveAndSave(zippedFile);
 
@@ -225,29 +266,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      /*appBar: AppBar(
-          title: const Text(
-            'Vasis Studio Beats',
-            style: TextStyle(
-              fontSize: 20,
-            ),
-            textAlign: TextAlign.left,
-          ),
-          actions: <Widget>[
-            /*
-            TextButton(
-              child: Text(_text,
-                  style: TextStyle(
-                    fontSize: 15.0,
-                    color: Colors.greenAccent,
-                    decoration: TextDecoration.underline,
-                  )),
-              onPressed: _launchURL,
-            ),*/
-            IconButton(
-                icon: Icon(Icons.more_vert, color: Colors.white),
-                onPressed: () {})
-          ]),*/
       body: Container(
         decoration: BoxDecoration(
             image: DecorationImage(
@@ -317,71 +335,79 @@ class _PlayListState extends State<Playlist> {
     return items.where((item) => item.genre == genre).toList();
   }
 
-
-  Widget buildListView(PageManager pageManager, String genre, List<dynamic> playlistTitles, int selectedIndex, Function(int) onSongSelected) {
-  return StatefulBuilder(
-    builder: (BuildContext context, StateSetter setState) {
-      return Scrollbar(
-        controller: _scrollController,
-        child: ListView.builder(
-          scrollDirection: Axis.vertical,
+  Widget buildListView(
+      PageManager pageManager,
+      String genre,
+      List<dynamic> playlistTitles,
+      int selectedIndex,
+      Function(int) onSongSelected) {
+    return StatefulBuilder(
+      builder: (BuildContext context, StateSetter setState) {
+        return Scrollbar(
           controller: _scrollController,
-          itemCount: getItemsByGenre(genre, playlistTitles).length,
-          itemBuilder: (BuildContext context, int index) {
-            int inferredIndex = int.parse(_currentSongId.value);
-            if (inferredIndex != selectedIndex) {
-              selectedIndex = inferredIndex;
-            }
-            return ItemSelectionController(
-              child: ItemSelectionBuilder(
-                index: int.parse(getItemsByGenre(genre, playlistTitles)[index].id),
-                builder: (context, index, selected) {
-                  return Card(
-                    elevation: selected ? 2 : 10,
-                    child: ListTile(
-                      onTap: () {
-                        pageManager.seekToSong(index);
-                        setState(() {
-                          selectedIndex = index;
-                        });
-                      },
-                      onLongPress: () {
-                        pageManager.seekToSong(index);
-                        setState(() {
-                          selectedIndex = index;
-                        });
-                      },
-                      title: selectedIndex == index
-                          ? Text(
-                              '${playlistTitles[index].title}',
-                              style: TextStyle(fontSize: 15, color: Colors.green),
-                            )
-                          : Text(
-                              '${playlistTitles[index].title}',
-                              style: TextStyle(fontSize: 15, color: Colors.purple.shade700),
-                            ),
-                      trailing: selectedIndex == index
-                          ? Icon(Icons.speaker, color: Colors.green.shade700)
-                          : Icon(Icons.queue_music_rounded, color: Colors.purple.shade700),
-                      leading: CircleAvatar(
-                        backgroundImage: AssetImage('images/$genre.png'),
-                        radius: selectedIndex == index ? 15 : 9,
+          child: ListView.builder(
+            scrollDirection: Axis.vertical,
+            controller: _scrollController,
+            itemCount: getItemsByGenre(genre, playlistTitles).length,
+            itemBuilder: (BuildContext context, int index) {
+              int inferredIndex = int.parse(_currentSongId.value);
+              if (inferredIndex != selectedIndex) {
+                selectedIndex = inferredIndex;
+              }
+              return ItemSelectionController(
+                child: ItemSelectionBuilder(
+                  index: int.parse(
+                      getItemsByGenre(genre, playlistTitles)[index].id),
+                  builder: (context, index, selected) {
+                    return Card(
+                      elevation: selected ? 2 : 10,
+                      child: ListTile(
+                        onTap: () {
+                          pageManager.seekToSong(index);
+                          setState(() {
+                            selectedIndex = index;
+                          });
+                        },
+                        onLongPress: () {
+                          pageManager.seekToSong(index);
+                          setState(() {
+                            selectedIndex = index;
+                          });
+                        },
+                        title: selectedIndex == index
+                            ? Text(
+                                '${playlistTitles[index].title}',
+                                style: TextStyle(
+                                    fontSize: 15, color: Colors.green),
+                              )
+                            : Text(
+                                '${playlistTitles[index].title}',
+                                style: TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.purple.shade700),
+                              ),
+                        trailing: selectedIndex == index
+                            ? Icon(Icons.speaker, color: Colors.green.shade700)
+                            : Icon(Icons.queue_music_rounded,
+                                color: Colors.purple.shade700),
+                        leading: CircleAvatar(
+                          backgroundImage: AssetImage('images/$genre.png'),
+                          radius: selectedIndex == index ? 15 : 9,
+                        ),
+                        tileColor: selectedIndex == index
+                            ? Colors.green.withOpacity(0.1)
+                            : Colors.purple.withOpacity(0.1),
                       ),
-                      tileColor: selectedIndex == index
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.purple.withOpacity(0.1),
-                    ),
-                  );
-                },
-              ),
-            );
-          },
-        ),
-      );
-    },
-  );
-}
-
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -455,67 +481,71 @@ class _PlayListState extends State<Playlist> {
                         itemBuilder: (BuildContext context, int index) {
                           //refactor this code into a separate function with parameters
                           //as it is used 3 times
-                          return StatefulBuilder(
-                            builder:
+                          return StatefulBuilder(builder:
                               (BuildContext context, StateSetter setState) {
                             return ItemSelectionController(
-                              child:  ItemSelectionBuilder(
-                                index: int.parse(getItemsByGenre('K', playlistTitles)[index].id),
-                                builder: (context, index, selected) {
-                                  //if there is a change in _currentSongId then update _selectedIndex
-                                  int inferredIndex =
-                                      int.parse(_currentSongId.value);
-                                  if (inferredIndex != _selectedIndex_k) {
-                                    _selectedIndex_k = inferredIndex;
-                                  }
-                                  return Card(
-                                    elevation: selected ? 2 : 10,
-                                    child: ListTile(
-                                        onTap: () => {
-                                           
-                                              pageManager.seekToSong(index),
+                                child: ItemSelectionBuilder(
+                                    index: int.parse(getItemsByGenre(
+                                            'K', playlistTitles)[index]
+                                        .id),
+                                    builder: (context, index, selected) {
+                                      //if there is a change in _currentSongId then update _selectedIndex
+                                      int inferredIndex =
+                                          int.parse(_currentSongId.value);
+                                      if (inferredIndex != _selectedIndex_k) {
+                                        _selectedIndex_k = inferredIndex;
+                                      }
+                                      return Card(
+                                        elevation: selected ? 2 : 10,
+                                        child: ListTile(
+                                            onTap: () => {
+                                                  pageManager.seekToSong(index),
+                                                  setState(() {
+                                                    _selectedIndex_k = index;
+                                                  }),
+                                                },
+                                            onLongPress: () {
+                                              pageManager.seekToSong(index);
                                               setState(() {
                                                 _selectedIndex_k = index;
-                                              }),
-                                          
+                                              });
                                             },
-                                        onLongPress: () {
-                                          pageManager.seekToSong(index);
-                                          setState(() {
-                                            _selectedIndex_k = index;
-                                          });
-                                        },
-                                        title: _selectedIndex_k == index
-                                            ? Text(
-                                                '${playlistTitles[index].title}',
-                                                style: TextStyle(
-                                                    fontSize: 15,
-                                                    color: Colors.green),
-                                              )
-                                            : Text(
-                                                '${playlistTitles[index].title}',
-                                                style: TextStyle(
-                                                  fontSize: 15,
-                                                  color: Colors.purple.shade700,
-                                                ),
-                                              ),
-                                        trailing: _selectedIndex_k == index
-                                            ? Icon(Icons.speaker,
-                                                color: Colors.green.shade700)
-                                            : Icon(Icons.queue_music_rounded,
-                                                color: Colors.purple.shade700),
-                                        leading: CircleAvatar(
-                                          backgroundImage:
-                                              AssetImage('images/k.png'),
-                                          radius:
-                                              _selectedIndex_k == index ? 20 : 9,
-                                        ),
-                                        tileColor: _selectedIndex_k == index
-                                            ? Colors.green.withOpacity(0.1)
-                                            : Colors.purple.withOpacity(0.1)),
-                                  );
-                                })
-                            );
+                                            title: _selectedIndex_k == index
+                                                ? Text(
+                                                    '${playlistTitles[index].title}',
+                                                    style: TextStyle(
+                                                        fontSize: 15,
+                                                        color: Colors.green),
+                                                  )
+                                                : Text(
+                                                    '${playlistTitles[index].title}',
+                                                    style: TextStyle(
+                                                      fontSize: 15,
+                                                      color: Colors
+                                                          .purple.shade700,
+                                                    ),
+                                                  ),
+                                            trailing: _selectedIndex_k == index
+                                                ? Icon(Icons.speaker,
+                                                    color:
+                                                        Colors.green.shade700)
+                                                : Icon(
+                                                    Icons.queue_music_rounded,
+                                                    color:
+                                                        Colors.purple.shade700),
+                                            leading: CircleAvatar(
+                                              backgroundImage:
+                                                  AssetImage('images/k.png'),
+                                              radius: _selectedIndex_k == index
+                                                  ? 20
+                                                  : 9,
+                                            ),
+                                            tileColor: _selectedIndex_k == index
+                                                ? Colors.green.withOpacity(0.1)
+                                                : Colors.purple
+                                                    .withOpacity(0.1)),
+                                      );
+                                    }));
                           });
                         },
                       ),
@@ -527,67 +557,72 @@ class _PlayListState extends State<Playlist> {
                         controller: _scrollController,
                         itemCount: getItemsByGenre('KM', playlistTitles).length,
                         itemBuilder: (BuildContext context, int index) {
-                          return StatefulBuilder(
-                            builder:
+                          return StatefulBuilder(builder:
                               (BuildContext context, StateSetter setState) {
                             return ItemSelectionController(
-                              child:  ItemSelectionBuilder(
-                                index: int.parse(getItemsByGenre('KM', playlistTitles)[index].id),
-                                builder: (context, index, selected) {
-                                  //if there is a change in _currentSongId then update _selectedIndex
-                                  int inferredIndex =
-                                      int.parse(_currentSongId.value);
-                                  if (inferredIndex != _selectedIndex_km) {
-                                    _selectedIndex_km = inferredIndex;
-                                  }
-                                  return Card(
-                                    elevation: selected ? 2 : 10,
-                                    child: ListTile(
-                                        onTap: () => {
-                                             
-                                              pageManager.seekToSong(index),
+                                child: ItemSelectionBuilder(
+                                    index: int.parse(getItemsByGenre(
+                                            'KM', playlistTitles)[index]
+                                        .id),
+                                    builder: (context, index, selected) {
+                                      //if there is a change in _currentSongId then update _selectedIndex
+                                      int inferredIndex =
+                                          int.parse(_currentSongId.value);
+                                      if (inferredIndex != _selectedIndex_km) {
+                                        _selectedIndex_km = inferredIndex;
+                                      }
+                                      return Card(
+                                        elevation: selected ? 2 : 10,
+                                        child: ListTile(
+                                            onTap: () => {
+                                                  pageManager.seekToSong(index),
+                                                  setState(() {
+                                                    _selectedIndex_km = index;
+                                                  }),
+                                                },
+                                            onLongPress: () {
+                                              pageManager.seekToSong(index);
                                               setState(() {
                                                 _selectedIndex_km = index;
-                                              }),
-                                              
+                                              });
                                             },
-                                        onLongPress: () {
-                                          pageManager.seekToSong(index);
-                                          setState(() {
-                                            _selectedIndex_km = index;
-                                          });
-                                        },
-                                        title: _selectedIndex_km == index
-                                            ? Text(
-                                                '${playlistTitles[index].title}',
-                                                style: TextStyle(
-                                                    fontSize: 15,
-                                                    color: Colors.green),
-                                              )
-                                            : Text(
-                                                '${playlistTitles[index].title}',
-                                                style: TextStyle(
-                                                  fontSize: 15,
-                                                  color: Colors.purple.shade700,
-                                                ),
-                                              ),
-                                        trailing: _selectedIndex_km == index
-                                            ? Icon(Icons.speaker,
-                                                color: Colors.green.shade700)
-                                            : Icon(Icons.queue_music_rounded,
-                                                color: Colors.purple.shade700),
-                                        leading: CircleAvatar(
-                                          backgroundImage:
-                                              AssetImage('images/km.png'),
-                                          radius:
-                                              _selectedIndex_km == index ? 20 : 9,
-                                        ),
-                                        tileColor: _selectedIndex_km == index
-                                            ? Colors.green.withOpacity(0.1)
-                                            : Colors.purple.withOpacity(0.1)),
-                                  );
-                                })
-                            );
+                                            title: _selectedIndex_km == index
+                                                ? Text(
+                                                    '${playlistTitles[index].title}',
+                                                    style: TextStyle(
+                                                        fontSize: 15,
+                                                        color: Colors.green),
+                                                  )
+                                                : Text(
+                                                    '${playlistTitles[index].title}',
+                                                    style: TextStyle(
+                                                      fontSize: 15,
+                                                      color: Colors
+                                                          .purple.shade700,
+                                                    ),
+                                                  ),
+                                            trailing: _selectedIndex_km == index
+                                                ? Icon(Icons.speaker,
+                                                    color:
+                                                        Colors.green.shade700)
+                                                : Icon(
+                                                    Icons.queue_music_rounded,
+                                                    color:
+                                                        Colors.purple.shade700),
+                                            leading: CircleAvatar(
+                                              backgroundImage:
+                                                  AssetImage('images/km.png'),
+                                              radius: _selectedIndex_km == index
+                                                  ? 20
+                                                  : 9,
+                                            ),
+                                            tileColor: _selectedIndex_km ==
+                                                    index
+                                                ? Colors.green.withOpacity(0.1)
+                                                : Colors.purple
+                                                    .withOpacity(0.1)),
+                                      );
+                                    }));
                           });
                         },
                       ),
@@ -600,67 +635,74 @@ class _PlayListState extends State<Playlist> {
                         itemCount:
                             getItemsByGenre('KMT', playlistTitles).length,
                         itemBuilder: (BuildContext context, int index) {
-                          return StatefulBuilder(
-                            builder:
+                          return StatefulBuilder(builder:
                               (BuildContext context, StateSetter setState) {
                             return ItemSelectionController(
-                              child:  ItemSelectionBuilder(
-                                index: int.parse(getItemsByGenre('KMT', playlistTitles)[index].id),
-                                builder: (context, index, selected) {
-                                  //if there is a change in _currentSongId then update _selectedIndex
-                                  int inferredIndex =
-                                      int.parse(_currentSongId.value);
-                                  if (inferredIndex != _selectedIndex_kmt) {
-                                    _selectedIndex_kmt = inferredIndex;
-                                  }
-                                  return Card(
-                                    elevation: selected ? 2 : 10,
-                                    child: ListTile(
-                                        onTap: () => {
-                                           
-                                              pageManager.seekToSong(index),
+                                child: ItemSelectionBuilder(
+                                    index: int.parse(getItemsByGenre(
+                                            'KMT', playlistTitles)[index]
+                                        .id),
+                                    builder: (context, index, selected) {
+                                      //if there is a change in _currentSongId then update _selectedIndex
+                                      int inferredIndex =
+                                          int.parse(_currentSongId.value);
+                                      if (inferredIndex != _selectedIndex_kmt) {
+                                        _selectedIndex_kmt = inferredIndex;
+                                      }
+                                      return Card(
+                                        elevation: selected ? 2 : 10,
+                                        child: ListTile(
+                                            onTap: () => {
+                                                  pageManager.seekToSong(index),
+                                                  setState(() {
+                                                    _selectedIndex_kmt = index;
+                                                  }),
+                                                },
+                                            onLongPress: () {
+                                              pageManager.seekToSong(index);
                                               setState(() {
                                                 _selectedIndex_kmt = index;
-                                              }),
-                                              
+                                              });
                                             },
-                                        onLongPress: () {
-                                          pageManager.seekToSong(index);
-                                          setState(() {
-                                            _selectedIndex_kmt = index;
-                                          });
-                                        },
-                                        title: _selectedIndex_kmt == index
-                                            ? Text(
-                                                '${playlistTitles[index].title}',
-                                                style: TextStyle(
-                                                    fontSize: 15,
-                                                    color: Colors.green),
-                                              )
-                                            : Text(
-                                                '${playlistTitles[index].title}',
-                                                style: TextStyle(
-                                                  fontSize: 15,
-                                                  color: Colors.purple.shade700,
-                                                ),
-                                              ),
-                                        trailing: _selectedIndex_kmt == index
-                                            ? Icon(Icons.speaker,
-                                                color: Colors.green.shade700)
-                                            : Icon(Icons.queue_music_rounded,
-                                                color: Colors.purple.shade700),
-                                        leading: CircleAvatar(
-                                          backgroundImage:
-                                              AssetImage('images/kmt.png'),
-                                          radius:
-                                              _selectedIndex_kmt == index ? 20 : 9,
-                                        ),
-                                        tileColor: _selectedIndex_kmt == index
-                                            ? Colors.green.withOpacity(0.1)
-                                            : Colors.purple.withOpacity(0.1)),
-                                  );
-                                })
-                            );
+                                            title: _selectedIndex_kmt == index
+                                                ? Text(
+                                                    '${playlistTitles[index].title}',
+                                                    style: TextStyle(
+                                                        fontSize: 15,
+                                                        color: Colors.green),
+                                                  )
+                                                : Text(
+                                                    '${playlistTitles[index].title}',
+                                                    style: TextStyle(
+                                                      fontSize: 15,
+                                                      color: Colors
+                                                          .purple.shade700,
+                                                    ),
+                                                  ),
+                                            trailing: _selectedIndex_kmt ==
+                                                    index
+                                                ? Icon(Icons.speaker,
+                                                    color:
+                                                        Colors.green.shade700)
+                                                : Icon(
+                                                    Icons.queue_music_rounded,
+                                                    color:
+                                                        Colors.purple.shade700),
+                                            leading: CircleAvatar(
+                                              backgroundImage:
+                                                  AssetImage('images/kmt.png'),
+                                              radius:
+                                                  _selectedIndex_kmt == index
+                                                      ? 20
+                                                      : 9,
+                                            ),
+                                            tileColor: _selectedIndex_kmt ==
+                                                    index
+                                                ? Colors.green.withOpacity(0.1)
+                                                : Colors.purple
+                                                    .withOpacity(0.1)),
+                                      );
+                                    }));
                           });
                         },
                       ),
@@ -670,7 +712,6 @@ class _PlayListState extends State<Playlist> {
               ),
             ),
           );
-          
         },
       ),
     );
