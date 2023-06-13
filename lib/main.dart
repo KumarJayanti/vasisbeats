@@ -48,11 +48,14 @@ void main() async {
 
 class DownloadProgress extends ChangeNotifier {
   double _percentDownloaded = 0.0;
+  String _path = "";
 
   double get percentDownloaded => _percentDownloaded;
+  String get path => _path;
 
-  void updateProgress(double value) {
+  void updateProgress(double value, String path) {
     _percentDownloaded = value;
+    _path = path;
     notifyListeners();
   }
 }
@@ -157,6 +160,7 @@ class _MyAppState extends State<MyApp> {
   Future<File> _downloadZippedFile(String url, String fileName) async {
     final req = await http.Client().send(http.Request('GET', Uri.parse(url)));
     final file = File('$_dir/$fileName');
+    //print("Directory= $_dir");
     final responseStream = req.stream;
     final totalBytes = req.contentLength ?? 0;
     var bytesDownloaded = 0;
@@ -168,7 +172,7 @@ class _MyAppState extends State<MyApp> {
       fileSink.add(chunk);
       final progress = bytesDownloaded / totalBytes;
       Provider.of<DownloadProgress>(context, listen: false)
-          .updateProgress(progress);
+          .updateProgress(progress, _dir);
     }
 
     await fileSink.close();
@@ -332,8 +336,12 @@ class _PlayListState extends State<Playlist> {
 
   List<dynamic> getItemsByGenre(String genre, List<dynamic> items) {
     //print(items);
+    bool checkboxValue = false;
+    bool y = checkboxValue != null && checkboxValue == true;
     return items.where((item) => item.genre == genre).toList();
   }
+
+
 
   Widget buildListView(
       PageManager pageManager,

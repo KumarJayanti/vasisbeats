@@ -28,6 +28,8 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app does not use the microphone but a library used by the app is triggering this requirement</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

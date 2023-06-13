@@ -3,6 +3,7 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 
 import 'main.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -39,11 +40,34 @@ class _SplashScreenState extends State<SplashScreen> {
     fontFamily: 'Horizon',
   );
 
+// Function to clean up the documents directory
+  Future<void> cleanUpDocumentsDirectory(String path) async {
+    Directory documentsDir = Directory(path);
+
+    // Get a list of all files in the documents directory
+    List<FileSystemEntity> files = documentsDir.listSync(recursive: false);
+
+    // Delete each file in the directory
+    for (var file in files) {
+      if (file is File) {
+        await file.delete();
+      }
+    }
+  }
+
+// Function to exit the app
+  void exitApp() {
+    // Call exit(0) to terminate the app
+    //print('Exiting the app...');
+    exit(0);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<DownloadProgress>(
       builder: (context, downloadProgress, _) {
         final percent = downloadProgress.percentDownloaded * 100;
+        final dir = downloadProgress.path;
         //print(downloadProgress.percentDownloaded);
         return Scaffold(
           body: Container(
@@ -57,7 +81,6 @@ class _SplashScreenState extends State<SplashScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                
                   DefaultTextStyle(
                     style: const TextStyle(
                       fontSize: 20.0,
@@ -65,14 +88,17 @@ class _SplashScreenState extends State<SplashScreen> {
                     child: AnimatedTextKit(
                       animatedTexts: [
                         ColorizeAnimatedText(
-                          'Downloading Beats Files...',
+                          'Downloading Beats Files of size ~500MB, tap \u{261E} \u{274C} to STOP and Cleanup',
                           textStyle: colorizeTextStyle,
                           colors: colorizeColors,
                         )
                       ],
                       isRepeatingAnimation: true,
                       onTap: () {
-                        print("Tap Event");
+                        //print("Tap Event");
+                        cleanUpDocumentsDirectory(dir).then((_) {
+                          exitApp();
+                        });
                       },
                     ),
                   ),
@@ -105,7 +131,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       ],
                       isRepeatingAnimation: true,
                       onTap: () {
-                        print("Tap Event");
+                        //print("Tap Event");
                       },
                     ),
                   ),
