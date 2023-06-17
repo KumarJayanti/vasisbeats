@@ -221,6 +221,9 @@ class _MyAppState extends State<MyApp> {
         await outFile.writeAsBytes(file.content);
       }
     }
+    //delete zip file
+    //print("Deleting zip file");
+    await zippedFile.delete();
   }
 
   progress() {
