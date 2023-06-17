@@ -88,7 +88,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     child: AnimatedTextKit(
                       animatedTexts: [
                         ColorizeAnimatedText(
-                          'Downloading Beats Files of size ~500MB, tap \u{261E} \u{274C} to STOP and Cleanup',
+                          'Downloading Beats Files of size ~150MB, tap \u{261E} \u{274C} to STOP and Cleanup',
                           textStyle: colorizeTextStyle,
                           colors: colorizeColors,
                         )
