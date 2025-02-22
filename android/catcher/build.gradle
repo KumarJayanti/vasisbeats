@@ -1,0 +1,26 @@
+def PLUGIN = "catcher";
+def ANDROIDX_WARNING = "android.library.reference.";
+gradle.projectsEvaluated {
+    project.tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    // If package in AndroidManifest.xml is "com.jhomlala.catcher"
+    namespace "com.jhomlala.catcher"
+    
+    compileSdkVersion 34
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 34
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

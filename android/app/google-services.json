@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "971357659383",
+    "project_id": "vasis-beats",
+    "storage_bucket": "vasis-beats.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971357659383:android:063a7f908c71c920f873f2",
+        "android_client_info": {
+          "package_name": "dev.suragch.flutter_audio_service_demo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "971357659383-bh1igoqage3d14uibeham3p7ehve75ih.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "dev.suragch.flutter_audio_service_demo",
+            "certificate_hash": "7f97da779c119488879b3abbe6b0c45ff5df78b7"
+          }
+        },
+        {
+          "client_id": "971357659383-705ge22an4i8pecg5ah8p9m0g419cl08.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiNSykhomSxEdwu8xs7LTJER33C-jF1h0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971357659383-705ge22an4i8pecg5ah8p9m0g419cl08.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "971357659383-evc5j8r3paoi0fpcdvhnt6ph09nopjnu.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.spiritsoft.FlutterAudio"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

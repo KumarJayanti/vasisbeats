@@ -12,3 +12,5 @@ PRODUCT_BUNDLE_IDENTIFIER = com.spiritsoft.FlutterAudio
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2022 com.spiritsoft All rights reserved.
+
+MACOSX_DEPLOYMENT_TARGET = 10.15
