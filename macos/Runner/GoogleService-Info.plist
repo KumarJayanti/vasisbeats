@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>971357659383-evc5j8r3paoi0fpcdvhnt6ph09nopjnu.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.971357659383-evc5j8r3paoi0fpcdvhnt6ph09nopjnu</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>971357659383-bh1igoqage3d14uibeham3p7ehve75ih.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyB6UkA1jZ8zAtXJNBJJZ51F6VL4dx2xozI</string>
+	<key>GCM_SENDER_ID</key>
+	<string>971357659383</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.spiritsoft.FlutterAudio</string>
+	<key>PROJECT_ID</key>
+	<string>vasis-beats</string>
+	<key>STORAGE_BUCKET</key>
+	<string>vasis-beats.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:971357659383:ios:13698d552fe86715f873f2</string>
+</dict>
+</plist>

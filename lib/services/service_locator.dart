@@ -1,5 +1,8 @@
 import 'package:audio_service/audio_service.dart';
 
+import 'package:get_it/get_it.dart';
+import 'auth_service.dart';
+
 import '../page_manager.dart';
 import 'audio_handler.dart';
 import 'playlist_repository.dart';
@@ -14,4 +17,6 @@ Future<void> setupServiceLocator() async {
 
   // page state
   getIt.registerLazySingleton<PageManager>(() => PageManager());
+  getIt.registerLazySingleton<AuthService>(() => AuthService());
+
 }

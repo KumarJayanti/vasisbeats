@@ -33,9 +33,13 @@ dependencies:
   awesome_snackbar_content:
   catcher: ^0.8.0
   fluttertoast: ^8.0.7
-  audioplayers: ^6.1.1
   provider: ^6.0.1
- 
+  google_sign_in: ^6.2.1
+  firebase_core: ^2.25.4
+  firebase_auth: ^4.17.4
+  audioplayers: ^5.2.1  # Downgrade to a compatible version
+  audioplayers_darwin: ^5.0.2  # Specify compatible version
+  
 dev_dependencies:
   flutter_lints: ^3.0.2
   flutter_test:
