@@ -205,7 +205,8 @@ class _MyAppState extends State<MyApp> {
     */
 
     var zippedFile = await _downloadZippedFile(_zipPath, _localZipFileName);
-    //print(zippedFile.path);
+    print("zipped file path=");
+    print(zippedFile.path);
     await unarchiveAndSave(zippedFile);
 
     setState(() {
