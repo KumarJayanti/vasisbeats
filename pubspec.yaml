@@ -31,12 +31,15 @@ dependencies:
   animated_text_kit: ^4.2.2
   file_manager: ^1.0.0
   awesome_snackbar_content:
-  catcher: ^0.8.0
-  fluttertoast: ^8.0.7
+  catcher:
+    path: ../catcher
+
+  fluttertoast: ^8.2.12
   provider: ^6.0.1
-  google_sign_in: ^6.2.1
-  firebase_core: ^2.25.4
-  firebase_auth: ^4.17.4
+  google_sign_in: ^6.3.0
+  firebase_core: ^3.13.1
+  firebase_auth: ^5.5.4
+  shared_preferences: ^2.0.0
   audioplayers: ^5.2.1  # Downgrade to a compatible version
   audioplayers_darwin: ^5.0.2  # Specify compatible version
   

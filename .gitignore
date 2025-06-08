@@ -1,9 +1,16 @@
 # Flutter/Dart specific
 .dart_tool/
+.firebase/
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
 pubspec.lock
+
+# Android NDK build artifacts
+android/app/.cxx/
+
+# iOS Swift Package Manager cache
+ios/**/xcshareddata/swiftpm/
 
 # Build outputs
 build/
