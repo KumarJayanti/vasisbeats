@@ -9,13 +9,21 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'screens/sign_in_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'dart:io' show Platform;
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final apps = Firebase.apps;
-  if (apps.isEmpty) {
-    await Firebase.initializeApp();
+  if (Firebase.apps.isEmpty) {
+    if (Platform.isMacOS || Platform.isIOS) {
+      await Firebase.initializeApp(); // auto-loads from plist
+    } else {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
   }
 
   await setupServiceLocator();

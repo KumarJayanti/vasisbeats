@@ -1,21 +1,9 @@
-def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader('UTF-8') { reader ->
-        localProperties.load(reader)
-    }
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.gms.google-services" version '4.4.2' apply false
 }
-
-def flutterRoot = localProperties.getProperty('flutter.sdk')
-if (flutterRoot == null) {
-    throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
-}
-
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'com.google.gms.google-services'
-apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
-
 android {
     namespace "dev.suragch.flutter_audio_service_demo"  // Your package name
     compileSdkVersion 34
@@ -35,7 +23,7 @@ android {
 
     defaultConfig {
         applicationId "dev.suragch.flutter_audio_service_demo"  // Your package name
-        minSdkVersion 22
+        minSdkVersion 23
         targetSdkVersion 34
         versionCode 1
         versionName "1.0"
@@ -53,6 +41,15 @@ flutter {
 }
 
 dependencies {
-    implementation platform('com.google.firebase:firebase-bom:32.7.4')
+    // Import the BoM for the Firebase platform
+    implementation(platform("com.google.firebase:firebase-bom:33.14.0"))
+
+    // Add the dependency for the Firebase Authentication library
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation("com.google.firebase:firebase-auth")
+
+    // Also add the dependency for the Google Play services library and specify its version
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
     implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.gms:google-services:4.4.2'
 }
