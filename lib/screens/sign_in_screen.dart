@@ -46,6 +46,11 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
       }
     } catch (e) {
       print('🔗 Error processing macOS sign-in link: $e');
+      if (e is FirebaseAuthException && e.message != null) {
+        print('🔐 Keychain error details: ${e.message}');
+      } else {
+        print('⚠️ Sign-in error: $e');
+      }
     } finally {
       setState(() => _isSigningIn = false);
     }
@@ -72,7 +77,14 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
         MaterialPageRoute(builder: (context) => ProfileScreen(beatsReady: widget.beatsReady)),
       );
     } catch (e) {
-      print("❌ Manual sign-in failed: $e");
+      print("❌ Manual ####### sign-in failed: $e");
+      if (e is FirebaseAuthException) {
+       debugPrint('🔥 FirebaseAuthException: ${e.code}');
+       debugPrint('Message: ${e.message}');
+       debugPrint('Details: ${e.toString()}');
+      } else {
+       debugPrint('❌ Unknown error: $e');
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Manual sign-in failed. Try again.")),
       );
@@ -91,7 +103,8 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
       handleCodeInApp: true,
       iOSBundleId: 'dev.spiritsoft.flutterAudioServiceDemo',
       androidPackageName: 'dev.suragch.flutter_audio_service_demo',
-      androidInstallApp: true,
+      //change to true before publishing
+      androidInstallApp: false,
       androidMinimumVersion: '21',
       dynamicLinkDomain: 'vasisbeats.page.link',
     );
