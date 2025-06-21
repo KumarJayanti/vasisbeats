@@ -1,12 +1,21 @@
 import 'package:flutter/foundation.dart';
 
 class RepeatButtonNotifier extends ValueNotifier<RepeatState> {
-  RepeatButtonNotifier() : super(_initialValue);
-  static const _initialValue = RepeatState.off;
+  RepeatButtonNotifier() : super(RepeatState.off);
 
   void nextState() {
-    final next = (value.index + 1) % RepeatState.values.length;
-    value = RepeatState.values[next];
+    value = RepeatState.values[(value.index + 1) % RepeatState.values.length];
+  }
+  
+  // Explicitly implement ValueListenable
+  @override
+  void addListener(VoidCallback listener) {
+    super.addListener(listener);
+  }
+  
+  @override
+  void removeListener(VoidCallback listener) {
+    super.removeListener(listener);
   }
 }
 

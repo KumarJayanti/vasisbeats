@@ -39,6 +39,7 @@ dependencies:
   google_sign_in: ^6.3.0
   firebase_core: ^3.13.1
   firebase_auth: ^5.5.4
+  cloud_firestore: ^5.6.9
   shared_preferences: ^2.0.0
   audioplayers: ^5.2.1  # Downgrade to a compatible version
   audioplayers_darwin: ^5.0.2  # Specify compatible version
@@ -57,6 +58,8 @@ flutter:
     - images/km.png
     - images/kmt.png
     - images/appicon.png
+    - images/default_profile.png
+    - images/upi_qr.png
 
 flutter_icons:
   android: true

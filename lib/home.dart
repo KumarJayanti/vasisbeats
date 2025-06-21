@@ -1,19 +1,28 @@
-import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/material.dart';
-import 'notifiers/play_button_notifier.dart';
-import 'notifiers/progress_notifier.dart';
-import 'notifiers/repeat_button_notifier.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:audio_service/audio_service.dart';
+import 'package:item_selector/item_selector.dart';
+import 'package:flutter/foundation.dart';
+import 'models/progress_bar_state.dart';
+import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
+
 import 'page_manager.dart';
 import 'services/service_locator.dart';
+import 'screens/beat_screens.dart';
+import 'notifiers/play_button_notifier.dart';
+import 'notifiers/repeat_button_notifier.dart';
 
-import 'package:url_launcher/url_launcher.dart';
-import 'package:item_selector/item_selector.dart';
-import 'package:audio_service/audio_service.dart';
-
-import 'package:flutter/foundation.dart';
-
+export 'notifiers/play_button_notifier.dart';
+export 'notifiers/progress_notifier.dart';
+export 'notifiers/repeat_button_notifier.dart';
+export 'page_manager.dart';
+export 'services/service_locator.dart';
+export 'screens/beat_screens.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -21,22 +30,23 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _downloading = false;
   bool _beatsReady = true;
-  String _dir = "";
-
-  String _text = 'SignUp';
-  final Uri _url = Uri.parse('https://kirtanforlife.com/');
 
   @override
   void initState() {
-    getIt<PageManager>().init();
-    _downloading = false;
     super.initState();
+    //getIt<PageManager>().init();
   }
 
   @override
   void dispose() {
     getIt<PageManager>().dispose();
     super.dispose();
+  }
+
+  bool get _isPaidUser {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+    return user.emailVerified;
   }
 
   @override
@@ -65,11 +75,43 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: TextStyle(color: Colors.red)),
                       onPressed: _beatsReady ? null : () {})
                   : Container(),
-              /*CurrentSongTitle(),*/
-              Playlist(),
-              /*AddRemoveSongButtons(),*/
-              AudioProgressBar(),
-              AudioControlButtons(),
+              Expanded(
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 20,
+                  crossAxisSpacing: 20,
+                  children: [
+                    _buildNavigationItem(
+                      icon: Icons.music_note,
+                      label: 'Do Taal Slow',
+                      onTap: () => _navigateToScreen(context, DoTaalSlowScreen()),
+                    ),
+                    _buildNavigationItem(
+                      icon: Icons.music_note,
+                      label: 'Do Taal Fast',
+                      onTap: () => _navigateToScreen(context, DoTaalFastScreen()),
+                      isPaidOnly: true,
+                    ),
+                    _buildNavigationItem(
+                      icon: Icons.music_note,
+                      label: 'Teen Taal Slow',
+                      onTap: () => _navigateToScreen(context, TeenTaalSlowScreen()),
+                    ),
+                    _buildNavigationItem(
+                      icon: Icons.music_note,
+                      label: 'Teen Taal Fast',
+                      onTap: () => _navigateToScreen(context, TeenTaalFastScreen()),
+                      isPaidOnly: true,
+                    ),
+                    _buildNavigationItem(
+                      icon: Icons.music_note,
+                      label: 'Changing Speeds',
+                      onTap: () => _navigateToScreen(context, ChangingSpeedsScreen()),
+                      isPaidOnly: true,
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -77,11 +119,74 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  _launchURL() async {
-    if (await canLaunchUrl(_url)) {
-      await launchUrl(_url);
+  Widget _buildNavigationItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool isPaidOnly = false,
+  }) {
+    bool isPaid = _isPaidUser;
+    
+    return GestureDetector(
+      onTap: isPaid || !isPaidOnly ? onTap : null,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.purple.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 10,
+              offset: Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 40,
+              color: Colors.white,
+            ),
+            SizedBox(height: 10),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (isPaidOnly) ...[
+              SizedBox(height: 5),
+              Text(
+                'Available for Paid Users',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 12,
+                ),
+              ),
+            ]
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToScreen(BuildContext context, Widget screen) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
+    );
+  }
+
+  Future<void> _launchURL(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
     } else {
-      throw 'Could not launch $_url';
+      throw 'Could not launch $url';
     }
   }
 }
@@ -110,7 +215,7 @@ class _PlayListState extends State<Playlist> {
 
   @override
   void dispose() {
-    _currentSongId.dispose();
+   //_currentSongId.dispose();
     super.dispose();
   }
 
@@ -504,20 +609,21 @@ class _PlayListState extends State<Playlist> {
   }
 }
 
+
 class AudioProgressBar extends StatelessWidget {
   const AudioProgressBar({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     final pageManager = getIt<PageManager>();
     return ValueListenableBuilder<ProgressBarState>(
       valueListenable: pageManager.progressNotifier,
       builder: (_, value, __) {
-        //print('SEEKING....');
         return ProgressBar(
           progress: value.current,
           buffered: value.buffered,
           total: value.total,
-          onSeek: pageManager.seek,
+          onSeek: (duration) => pageManager.seek(duration),
         );
       },
     );
@@ -552,20 +658,13 @@ class RepeatButton extends StatelessWidget {
     return ValueListenableBuilder<RepeatState>(
       valueListenable: pageManager.repeatButtonNotifier,
       builder: (context, value, child) {
-        Icon icon;
-        switch (value) {
-          case RepeatState.off:
-            icon = Icon(Icons.repeat, color: Colors.white);
-            break;
-          case RepeatState.repeatSong:
-            icon = Icon(Icons.repeat_one, color: Colors.white);
-            break;
-          case RepeatState.repeatPlaylist:
-            icon = Icon(Icons.repeat, color: Colors.white);
-            break;
-        }
         return IconButton(
-            icon: icon, onPressed: pageManager.repeat, color: Colors.white);
+          icon: Icon(
+            value == RepeatState.repeatSong ? Icons.repeat_one : Icons.repeat,
+            color: Colors.white,
+          ),
+          onPressed: pageManager.toggleRepeat,
+        );
       },
     );
   }

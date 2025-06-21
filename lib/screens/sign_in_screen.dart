@@ -4,6 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import '../splash.dart';
 import '../home.dart';
+import '../utils.dart';
+import 'admin_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EmailLinkSignInScreen extends StatefulWidget {
   final bool beatsReady;
@@ -36,12 +40,18 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
 
       if (link != null && email != null && _auth.isSignInWithEmailLink(link)) {
         setState(() => _isSigningIn = true);
-        await _auth.signInWithEmailLink(email: email, emailLink: link);
+
+        final cred =
+            await _auth.signInWithEmailLink(email: email, emailLink: link);
+        await createOrUpdateUserInFirestore(cred.user!);
+
         await prefs.remove('macos_email_link');
         await prefs.remove('email_for_signin');
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => ProfileScreen(beatsReady: widget.beatsReady)),
+          MaterialPageRoute(
+              builder: (context) =>
+                  ProfileScreen(beatsReady: widget.beatsReady)),
         );
       }
     } catch (e) {
@@ -71,19 +81,23 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
 
     try {
       setState(() => _isSigningIn = true);
-      await _auth.signInWithEmailLink(email: email, emailLink: link);
+      final cred =
+          await _auth.signInWithEmailLink(email: email, emailLink: link);
+      await createOrUpdateUserInFirestore(cred.user!);
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ProfileScreen(beatsReady: widget.beatsReady)),
+        MaterialPageRoute(
+            builder: (context) => ProfileScreen(beatsReady: widget.beatsReady)),
       );
     } catch (e) {
       print("❌ Manual ####### sign-in failed: $e");
       if (e is FirebaseAuthException) {
-       debugPrint('🔥 FirebaseAuthException: ${e.code}');
-       debugPrint('Message: ${e.message}');
-       debugPrint('Details: ${e.toString()}');
+        debugPrint('🔥 FirebaseAuthException: ${e.code}');
+        debugPrint('Message: ${e.message}');
+        debugPrint('Details: ${e.toString()}');
       } else {
-       debugPrint('❌ Unknown error: $e');
+        debugPrint('❌ Unknown error: $e');
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Manual sign-in failed. Try again.")),
@@ -106,11 +120,12 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
       //change to true before publishing
       androidInstallApp: false,
       androidMinimumVersion: '21',
-      dynamicLinkDomain: 'vasisbeats.page.link',
+      //dynamicLinkDomain: 'vasisbeats.page.link',
     );
 
     try {
-      await _auth.sendSignInLinkToEmail(email: email, actionCodeSettings: actionCodeSettings);
+      await _auth.sendSignInLinkToEmail(
+          email: email, actionCodeSettings: actionCodeSettings);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('email_for_signin', email);
       setState(() => _linkSent = true);
@@ -164,7 +179,9 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
                 ElevatedButton(
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => ProfileScreen(beatsReady: widget.beatsReady)),
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            ProfileScreen(beatsReady: widget.beatsReady)),
                   ),
                   child: Text("Go to Profile"),
                 ),
@@ -199,7 +216,8 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
                   Text("Paste the sign-in link you received:"),
                   TextField(
                     controller: _linkController,
-                    decoration: InputDecoration(labelText: "Email sign-in link"),
+                    decoration:
+                        InputDecoration(labelText: "Email sign-in link"),
                   ),
                   SizedBox(height: 10),
                   ElevatedButton(
@@ -220,9 +238,44 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
   }
 }
 
+Future<void> createOrUpdateUserInFirestore(User user) async {
+  final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+  final snapshot = await docRef.get();
+
+  final adminDoc =
+      await FirebaseFirestore.instance.collection('admins').doc(user.uid).get();
+  final isAdmin = adminDoc.exists;
+  final userEmail = user.email ?? "";
+  if (!snapshot.exists) {
+    await docRef.set({
+      'userId': user.uid,
+      'userName': userEmail.split('@').first,
+      'email': user.email ?? '',
+      'role': isAdmin ? 'admin' : 'user',
+      'account_type': 'free',
+      'donation_amount': 0.0,
+      'created_at': FieldValue.serverTimestamp(),
+    });
+  }
+}
+
 class ProfileScreen extends StatelessWidget {
   final bool beatsReady;
+
   ProfileScreen({required this.beatsReady});
+
+  Future<Map<String, dynamic>> _getUserData(String uid) async {
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final data = doc.data() ?? {};
+    final isAdmin =
+        (await FirebaseFirestore.instance.collection('admins').doc(uid).get())
+            .exists;
+    return {
+      ...data,
+      'is_admin': isAdmin,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -230,46 +283,150 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text("Profile")),
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(24.0),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: _getUserData(user!.uid),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData)
+            return Center(child: CircularProgressIndicator());
+
+          final data = snapshot.data!;
+          final userName = data['userName'] ?? "N/A";
+          final email = data['email'] ?? "N/A";
+          final accountType = data['role'] == 'admin'
+              ? "Paid (Admin)"
+              : data['account_type'] ?? "Free";
+          final donation = data['donation_amount'] ?? 0.0;
+          final isAdmin = data['is_admin'] ?? false;
+
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Email: ${user?.email ?? "Unknown"}"),
+                // User Info + Profile Pic
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundImage: AssetImage('images/default_profile.png'),
+                    ),
+                    SizedBox(width: 20),
+                    Expanded(
+                      child: Card(
+                        elevation: 4,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Username: $userName"),
+                              Text("Email: $email"),
+                              Text("Account Type: $accountType"),
+                              Text(
+                                  "Donation Amount: \$${donation.toStringAsFixed(1)}"),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 30),
+
+                // Donate Section
+                Card(
+                  elevation: 4,
+                  margin: EdgeInsets.symmetric(vertical: 20),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                            "Donate to Vasis Studios and Send Details to vasisbeats@gmail.com",
+                            style: Theme.of(context).textTheme.titleMedium),
+                        SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Column(
+                              children: [
+                                Image.asset(
+                                  'images/upi_qr.png',
+                                  height: 160,
+                                  width: 160,
+                                  fit: BoxFit.contain, // Ensures no distortion
+                                ),
+                                SizedBox(height: 10),
+                                Text("Donate with UPI"),
+                              ],
+                            ),
+                            Column(
+                              children: [
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    launchUrl(Uri.parse(
+                                        "https://www.paypal.com/paypalme/bhagavatikumar"));
+                                  },
+                                  icon: Icon(Icons.payment),
+                                  label: Text("Donate via PayPal"),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                Spacer(),
+
+                // Footer buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        await FirebaseAuth.instance.signOut();
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) =>
+                                  EmailLinkSignInScreen(beatsReady: true)),
+                          (_) => false,
+                        );
+                      },
+                      child: Text("Sign Out"),
+                    ),
+                    if (isAdmin)
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => AdminPanelScreen()));
+                        },
+                        child: Text("Admin Panel"),
+                      ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => data['beatsReady'] == true
+                                  ? HomeScreen()
+                                  : SplashScreen()),
+                        );
+                      },
+                      child: Text("Go to Beats"),
+                    ),
+                  ],
+                )
               ],
             ),
-          ),
-          Positioned(
-            bottom: 20,
-            left: 20,
-            child: ElevatedButton(
-              onPressed: () async {
-                await FirebaseAuth.instance.signOut();
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => EmailLinkSignInScreen(beatsReady: beatsReady)),
-                  (_) => false,
-                );
-              },
-              child: Text("Sign Out"),
-            ),
-          ),
-          Positioned(
-            bottom: 20,
-            right: 20,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => beatsReady ? HomeScreen() : SplashScreen()),
-                );
-              },
-              child: Text("Go to Beats"),
-            ),
-          )
-        ],
+          );
+        },
       ),
     );
   }

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'notifiers/play_button_notifier.dart';
 import 'notifiers/progress_notifier.dart';
@@ -6,26 +5,37 @@ import 'notifiers/repeat_button_notifier.dart';
 import 'package:audio_service/audio_service.dart';
 import 'services/playlist_repository.dart';
 import 'services/service_locator.dart';
+import 'models/progress_bar_state.dart';
 
 
 class PageManager {
   // Listeners: Updates going to the UI
   final currentSongTitleNotifier = ValueNotifier<String>('');
   final currentSongIdNotifier = ValueNotifier<String>('');
-  //final playlistNotifier = ValueNotifier<List<String>>([]);
   final playlistNotifier = ValueNotifier<List<MediaItem>>([]);
-  final progressNotifier = ProgressNotifier();
-  final repeatButtonNotifier = RepeatButtonNotifier();
-  final isFirstSongNotifier = ValueNotifier<bool>(true);
-  final playButtonNotifier = PlayButtonNotifier();
-  final isLastSongNotifier = ValueNotifier<bool>(true);
-  final isShuffleModeEnabledNotifier = ValueNotifier<bool>(false);
+  final ProgressNotifier _progressNotifier = ProgressNotifier();
+  
+  // Private notifiers
+  final PlayButtonNotifier _playButtonNotifier = PlayButtonNotifier();
+  final RepeatButtonNotifier _repeatButtonNotifier = RepeatButtonNotifier();
+  final ValueNotifier<bool> _isFirstSongNotifier = ValueNotifier<bool>(true);
+  final ValueNotifier<bool> _isLastSongNotifier = ValueNotifier<bool>(true);
+  final ValueNotifier<bool> _isShuffleModeEnabledNotifier = ValueNotifier<bool>(false);
+  
+  // Getters to expose notifiers as ValueListenable
+  ValueListenable<ButtonState> get playButtonNotifier => _playButtonNotifier;
+  ValueListenable<RepeatState> get repeatButtonNotifier => _repeatButtonNotifier;
+  ValueListenable<bool> get isFirstSongNotifier => _isFirstSongNotifier;
+  ValueListenable<bool> get isLastSongNotifier => _isLastSongNotifier;
+  ValueListenable<bool> get isShuffleModeEnabledNotifier => _isShuffleModeEnabledNotifier;
+  ValueListenable<ProgressBarState> get progressNotifier => _progressNotifier;
 
-  final _audioHandler = getIt<AudioHandler>();
+  late AudioHandler _audioHandler;
 
   // Events: Calls coming from the UI
-  void init() async {
-    await _loadPlaylist();
+  void init({required String genre}) async {
+    _audioHandler = await getIt<AudioHandler>();
+    await _loadPlaylist(genre: genre);
     _listenToChangesInPlaylist();
     _listenToPlaybackState();
     _listenToCurrentPosition();
@@ -34,9 +44,11 @@ class PageManager {
     _listenToChangesInSong();
   }
 
-  Future<void> _loadPlaylist() async {
+  Future<void> _loadPlaylist({required String genre}) async {
+    // Always reset play button state to stopped when switching genres
+    _playButtonNotifier.setState(ButtonState.paused);
     final songRepository = getIt<PlaylistRepository>();
-    final playlist = await songRepository.fetchInitialPlaylist();
+    final playlist = await songRepository.fetchInitialPlaylist(genre: genre);
     final mediaItems = playlist
         .map((song) => MediaItem(
               id: song['id'] ?? '',
@@ -46,6 +58,20 @@ class PageManager {
               genre: song['genre'] ?? '',
             ))
         .toList();
+    if (mediaItems.isEmpty) {
+      // Aggressive reset: clear UI and audio handler state
+      print('[PageManager] No media items for this genre. Clearing state.');
+      playlistNotifier.value = [];
+      currentSongTitleNotifier.value = '';
+      currentSongIdNotifier.value = '';
+      print('[PageManager] Calling clearQueue on handler: ${_audioHandler.runtimeType}'); 
+      await _audioHandler.customAction('clearQueue'); // force clear queue and player
+      _playButtonNotifier.setState(ButtonState.paused);
+      print('[PageManager] After reset: playlistNotifier.value.length = ${playlistNotifier.value.length}');
+      print('[PageManager] AudioHandler queue.length = ${_audioHandler.queue.value.length}');
+      print('[PageManager] Play button state = ${_playButtonNotifier.value}');
+      return;
+    }
     _audioHandler.addQueueItems(mediaItems);
   }
 
@@ -70,11 +96,11 @@ class PageManager {
       final processingState = playbackState.processingState;
       if (processingState == AudioProcessingState.loading ||
           processingState == AudioProcessingState.buffering) {
-        playButtonNotifier.value = ButtonState.loading;
+        _playButtonNotifier.setState(ButtonState.loading);
       } else if (!isPlaying) {
-        playButtonNotifier.value = ButtonState.paused;
+        _playButtonNotifier.setState(ButtonState.paused);
       } else if (processingState != AudioProcessingState.completed) {
-        playButtonNotifier.value = ButtonState.playing;
+        _playButtonNotifier.setState(ButtonState.playing);
       } else {
         _audioHandler.seek(Duration.zero);
         _audioHandler.pause();
@@ -83,35 +109,25 @@ class PageManager {
   }
 
   void _listenToCurrentPosition() {
-    AudioService.position.listen((position) {
-      final oldState = progressNotifier.value;
-      progressNotifier.value = ProgressBarState(
-        current: position,
-        buffered: oldState.buffered,
-        total: oldState.total,
-      );
+    _audioHandler.playbackState.listen((state) {
+      final position = state.updatePosition;
+      if (position.inMilliseconds > 0) {
+        _progressNotifier.update(current: position);
+      }
     });
   }
 
   void _listenToBufferedPosition() {
-    _audioHandler.playbackState.listen((playbackState) {
-      final oldState = progressNotifier.value;
-      progressNotifier.value = ProgressBarState(
-        current: oldState.current,
-        buffered: playbackState.bufferedPosition,
-        total: oldState.total,
-      );
+    _audioHandler.playbackState.listen((state) {
+      _progressNotifier.update(buffered: state.bufferedPosition);
     });
   }
 
   void _listenToTotalDuration() {
-    _audioHandler.mediaItem.listen((mediaItem) {
-      final oldState = progressNotifier.value;
-      progressNotifier.value = ProgressBarState(
-        current: oldState.current,
-        buffered: oldState.buffered,
-        total: mediaItem?.duration ?? Duration.zero,
-      );
+    _audioHandler.mediaItem.listen((item) {
+      if (item?.duration != null) {
+        _progressNotifier.update(total: item!.duration!);
+      }
     });
   }
 
@@ -128,12 +144,12 @@ class PageManager {
   void _updateSkipButtons() {
     final mediaItem = _audioHandler.mediaItem.value;
     final playlist = _audioHandler.queue.value;
-    if (playlist.length < 2 || mediaItem == null) {
-      isFirstSongNotifier.value = true;
-      isLastSongNotifier.value = true;
+    if (playlist.isEmpty || mediaItem == null) {
+      _isFirstSongNotifier.value = true;
+      _isLastSongNotifier.value = true;
     } else {
-      isFirstSongNotifier.value = playlist.first == mediaItem;
-      isLastSongNotifier.value = playlist.last == mediaItem;
+      _isFirstSongNotifier.value = playlist.first == mediaItem;
+      _isLastSongNotifier.value = playlist.last == mediaItem;
     }
   }
 
@@ -146,14 +162,18 @@ class PageManager {
   void play() => _audioHandler.play();
   void pause() => _audioHandler.pause();
 
-  void seek(Duration position) => _audioHandler.seek(position);
+  void seek(Duration? position) {
+    if (position != null) {
+      _audioHandler.seek(position);
+    }
+  }
 
   void previous() =>  _audioHandler.skipToPrevious(); 
   void next() => _audioHandler.skipToNext();
 
-  void repeat() {
-    repeatButtonNotifier.nextState();
-    final repeatMode = repeatButtonNotifier.value;
+  void toggleRepeat() {
+    _repeatButtonNotifier.nextState();
+    final repeatMode = _repeatButtonNotifier.value;
     switch (repeatMode) {
       case RepeatState.off:
         _audioHandler.setRepeatMode(AudioServiceRepeatMode.none);
@@ -168,8 +188,8 @@ class PageManager {
   }
 
   void shuffle() {
-    final enable = !isShuffleModeEnabledNotifier.value;
-    isShuffleModeEnabledNotifier.value = enable;
+    final enable = !_isShuffleModeEnabledNotifier.value;
+    _isShuffleModeEnabledNotifier.value = enable;
     if (enable) {
       _audioHandler.setShuffleMode(AudioServiceShuffleMode.all);
     } else {
@@ -205,11 +225,13 @@ class PageManager {
     _audioHandler.removeQueueItemAt(lastIndex);
   }
 
-  void dispose() {
-    _audioHandler.customAction('dispose');
-  }
-
   void stop() {
     _audioHandler.stop();
   }
+
+  void dispose() {
+    // Removed dispose call to keep player alive
+  }
+
+  
 }

@@ -11,6 +11,8 @@ import 'screens/sign_in_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'dart:io' show Platform;
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 
 void main() async {
@@ -36,12 +38,14 @@ void main() async {
     debugConfig: CatcherOptions(
       PageReportMode(showStackTrace: true),
       [
+        ConsoleHandler(), 
         EmailManualHandler(["kumar.jayanti@gmail.com"])
       ],
     ),
     releaseConfig: CatcherOptions(
       PageReportMode(showStackTrace: true),
       [
+        ConsoleHandler(), 
         EmailManualHandler(["kumar.jayanti@gmail.com"])
       ],
     ),
@@ -71,15 +75,62 @@ class MyApp extends StatefulWidget {
 //https://storage.googleapis.com/vasis/vasis-sounds.zip
 //https://storage.googleapis.com/vasis/last_updated.txt
 
+
 class _MyAppState extends State<MyApp> {
+  late Future<bool> _initializationDone;
   //we can optimize  this by checking filesytem here.
   var _beatsReady = false;
-  var _initializationDone = Future.value(true);
 
   @override
   void initState() {
     super.initState();
+    _initializationDone = _initUserProfile();
   }
+
+  Future<bool> _initUserProfile() async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print("🚫 No user signed in yet");
+      return true; // Nothing to initialize
+    }
+
+    final uid = user.uid;
+    final userDoc = FirebaseFirestore.instance.collection('users').doc(uid);
+    final userSnapshot = await userDoc.get();
+
+    // Check if user is in the 'admins' collection
+    final isAdmin = await FirebaseFirestore.instance
+        .collection('admins')
+        .doc(uid)
+        .get()
+        .then((doc) => doc.exists);
+
+    if (!userSnapshot.exists) {
+      final userEmail = user.email ?? "";
+      final userName = userEmail.split('@').first;
+      await userDoc.set({
+        'userId': uid,
+        'userName': userName,
+        'email': user.email ?? '',
+        'role': isAdmin ? 'admin' : 'user',
+        'account_type': isAdmin ? 'paid' : 'free',
+        'donation_amount': isAdmin ? 9999.0 : 0.0,
+        'created_at': FieldValue.serverTimestamp(),
+      });
+      print("🆕 Created Firestore user doc for $uid");
+    } else {
+      print("✅ User doc already exists for $uid");
+    }
+
+    return true;
+  } catch (e, st) {
+    print("❌ Error initializing user profile: $e");
+    print(st);
+    return false;
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -97,14 +148,12 @@ class _MyAppState extends State<MyApp> {
           }
 
           final user = FirebaseAuth.instance.currentUser;
+          print("user: $user");
           if (user == null) {
             return EmailLinkSignInScreen(beatsReady: _beatsReady);
           }
 
-          print("Firebase user: ${FirebaseAuth.instance.currentUser}");
-          print("Beats ready: $_beatsReady");
-
-          return ProfileScreen(beatsReady: _beatsReady); // 🔁 go here instead of SplashScreen or HomeScreen
+          return ProfileScreen(beatsReady: _beatsReady);
         },
       ),
     );

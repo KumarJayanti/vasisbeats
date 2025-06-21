@@ -14,6 +14,20 @@ Future<AudioHandler> initAudioService() async {
 }
 
 class MyAudioHandler extends BaseAudioHandler {
+  Future<void> clearQueue() async {
+    // Clear the player playlist
+    try {
+      await _player.stop();
+      await _player.setAudioSource(ConcatenatingAudioSource(children: []));
+    } catch (e) {
+      print('[MyAudioHandler] Error clearing player audio source: $e');
+    }
+    // Clear the handler queue
+    queue.add([]);
+    mediaItem.add(null);
+    print('[MyAudioHandler] clearQueue: queue and player cleared.');
+  }
+
   final _player = AudioPlayer();
   final _playlist = ConcatenatingAudioSource(children: []);
 
@@ -108,6 +122,32 @@ class MyAudioHandler extends BaseAudioHandler {
   }
 
   @override
+  Future<dynamic> customAction(String name,
+      [Map<String, dynamic>? extras]) async {
+    print('[MyAudioHandler] customAction CALLED with name: $name');
+    print('1.Clearing queue...');
+    switch (name) {
+      case 'clearQueue':
+        print('2.Clearing queue...');
+        queue.add([]);
+        mediaItem.add(null);
+        playbackState.add(playbackState.value.copyWith(
+          processingState: AudioProcessingState.idle,
+          playing: false,
+        ));
+        print('Queue cleared');
+        return 'Queue cleared';
+        break;
+      case 'dispose':
+        await _player.dispose();
+        super.stop();
+        break;
+      default:
+        throw UnimplementedError('Unknown custom action: $name');
+    }
+  }
+
+  @override
   Future<void> addQueueItems(List<MediaItem> mediaItems) async {
     // manage Just Audio
     final audioSource = mediaItems.map(_createAudioSource);
@@ -196,13 +236,14 @@ class MyAudioHandler extends BaseAudioHandler {
     }
   }
 
+  /*
   @override
   Future customAction(String name, [Map<String, dynamic>? extras]) async {
     if (name == 'dispose') {
       await _player.dispose();
       super.stop();
     }
-  }
+  }*/
 
   @override
   Future<void> stop() async {
