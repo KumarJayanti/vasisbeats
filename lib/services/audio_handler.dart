@@ -117,6 +117,7 @@ class MyAudioHandler extends BaseAudioHandler {
       final sequence = sequenceState?.effectiveSequence;
       if (sequence == null || sequence.isEmpty) return;
       final items = sequence.map((source) => source.tag as MediaItem);
+      print('[MyAudioHandler::_listenForSequenceStateChanges] Adding queue of length: ${items.length}');
       queue.add(items.toList());
     });
   }
@@ -149,13 +150,11 @@ class MyAudioHandler extends BaseAudioHandler {
 
   @override
   Future<void> addQueueItems(List<MediaItem> mediaItems) async {
-    // manage Just Audio
-    final audioSource = mediaItems.map(_createAudioSource);
-    _playlist.addAll(audioSource.toList());
-
-    // notify system
-    final newQueue = queue.value..addAll(mediaItems);
-    queue.add(newQueue);
+    // REPLACE the player playlist with new items
+    final newAudioSources = mediaItems.map(_createAudioSource).toList();
+    await _player.stop();
+    await _player.setAudioSource(ConcatenatingAudioSource(children: newAudioSources));
+    // Do NOT manually update queue here; let _listenForSequenceStateChanges handle it.
   }
 
   @override

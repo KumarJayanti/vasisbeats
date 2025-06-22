@@ -7,6 +7,7 @@ import 'dart:convert';
 abstract class PlaylistRepository {
   Future<List<Map<String, String>>> fetchInitialPlaylist({required String genre});
   Future<Map<String, String>> fetchAnotherSong();
+  Future<List<Map<String, String>>> fetchPlaylistByGenreAndCategory({required String genre, required String category});
 }
 
 class DemoPlaylist extends PlaylistRepository {
@@ -64,8 +65,46 @@ class DemoPlaylist extends PlaylistRepository {
   }
 
   @override
-  Future<List<Map<String, String>>> fetchInitialPlaylist(
-      {required String genre}) async {
+  /// Returns all unique categories for a given genre.
+  List<String> getCategoriesForGenre(String genre) {
+  print('[getCategoriesForGenre] Called with genre: $genre');
+    if (!isSongsNewInitialized()) return [];
+    final categories = songsNew
+      .where((song) => song['genre'] == genre)
+      .map((song) => song['category'] ?? '')
+      .where((cat) => cat.isNotEmpty)
+      .toSet()
+      .map((e) => e.toString())
+      .toList();
+    categories.sort();
+    return categories;
+  }
+
+  /// Returns playlist filtered by genre and category.
+  @override
+  Future<List<Map<String, String>>> fetchPlaylistByGenreAndCategory({
+    required String genre,
+    required String category,
+  }) async {
+    print('[fetchPlaylistByGenreAndCategory] Called with genre: $genre, category: $category, arguments: {genre: $genre, category: $category}');
+    if (!isSongsNewInitialized() || baseURL.isEmpty) {
+      print('[fetchPlaylistByGenreAndCategory] Initializing songsNew and baseURL...');
+      await _initDir();
+    }
+    if (!isSongsNewInitialized()) {
+      print('[fetchPlaylistByGenreAndCategory] ERROR: songsNew still not initialized after _initDir!');
+      return [];
+    }
+    final filteredRawSongs = songsNew.where((song) => song['genre'] == genre && song['category'] == category).toList();
+    print('[fetchPlaylistByGenreAndCategory] Found ${filteredRawSongs.length} songs for genre: $genre, category: $category');
+    if (filteredRawSongs.isNotEmpty) {
+      print('[fetchPlaylistByGenreAndCategory] First song title: \'${filteredRawSongs[0]['title']}\'');
+    }
+    return List<Map<String, String>>.from(filteredRawSongs);
+  }
+
+  Future<List<Map<String, String>>> fetchInitialPlaylist({required String genre}) async {
+  print('[fetchInitialPlaylist] Called with genre: $genre');
     print('[fetchInitialPlaylist] Called with genre: $genre');
     // Defensive: ensure songsNew is initialized
     if (!isSongsNewInitialized() || baseURL.isEmpty) {

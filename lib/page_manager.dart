@@ -7,48 +7,99 @@ import 'services/playlist_repository.dart';
 import 'services/service_locator.dart';
 import 'models/progress_bar_state.dart';
 
-
 class PageManager {
+  bool _isInitialized = false;
   // Listeners: Updates going to the UI
   final currentSongTitleNotifier = ValueNotifier<String>('');
   final currentSongIdNotifier = ValueNotifier<String>('');
   final playlistNotifier = ValueNotifier<List<MediaItem>>([]);
   final ProgressNotifier _progressNotifier = ProgressNotifier();
-  
+
   // Private notifiers
   final PlayButtonNotifier _playButtonNotifier = PlayButtonNotifier();
   final RepeatButtonNotifier _repeatButtonNotifier = RepeatButtonNotifier();
   final ValueNotifier<bool> _isFirstSongNotifier = ValueNotifier<bool>(true);
   final ValueNotifier<bool> _isLastSongNotifier = ValueNotifier<bool>(true);
-  final ValueNotifier<bool> _isShuffleModeEnabledNotifier = ValueNotifier<bool>(false);
-  
+  final ValueNotifier<bool> _isShuffleModeEnabledNotifier =
+      ValueNotifier<bool>(false);
+
   // Getters to expose notifiers as ValueListenable
   ValueListenable<ButtonState> get playButtonNotifier => _playButtonNotifier;
-  ValueListenable<RepeatState> get repeatButtonNotifier => _repeatButtonNotifier;
+  ValueListenable<RepeatState> get repeatButtonNotifier =>
+      _repeatButtonNotifier;
   ValueListenable<bool> get isFirstSongNotifier => _isFirstSongNotifier;
   ValueListenable<bool> get isLastSongNotifier => _isLastSongNotifier;
-  ValueListenable<bool> get isShuffleModeEnabledNotifier => _isShuffleModeEnabledNotifier;
+  ValueListenable<bool> get isShuffleModeEnabledNotifier =>
+      _isShuffleModeEnabledNotifier;
   ValueListenable<ProgressBarState> get progressNotifier => _progressNotifier;
 
   late AudioHandler _audioHandler;
 
   // Events: Calls coming from the UI
-  void init({required String genre}) async {
+  Future<void> init(
+      {required String genre,
+      String? category,
+      bool loadPlaylist = false}) async {
     _audioHandler = await getIt<AudioHandler>();
-    await _loadPlaylist(genre: genre);
+    if (loadPlaylist) {
+      await _loadPlaylist(genre: genre, category: category);
+    }
     _listenToChangesInPlaylist();
     _listenToPlaybackState();
     _listenToCurrentPosition();
     _listenToBufferedPosition();
     _listenToTotalDuration();
     _listenToChangesInSong();
+    _isInitialized = true;
   }
 
-  Future<void> _loadPlaylist({required String genre}) async {
+  /// Loads a playlist from an in-memory list of song maps (used for category filtering)
+  /// Call init() before using this method!
+  Future<void> loadFromMemory(List<Map<String, String>> beats) async {
+    final mediaItems = beats
+        .map((song) => MediaItem(
+              id: song['id'] ?? '',
+              album: song['album'] ?? '',
+              title: song['title'] ?? '',
+              extras: {'url': song['url']},
+              genre: song['genre'] ?? '',
+            ))
+        .toList();
+    // Clear previous queue if needed
+    playlistNotifier.value = [];
+    currentSongTitleNotifier.value = '';
+    currentSongIdNotifier.value = '';
+
+    print('[PageManager::loadFromMemory] Clearing queue before adding new category songs');
+    await _audioHandler.customAction('clearQueue');
+int size = await _audioHandler.queue.value.length;
+print('[PageManager::loadFromMemory] Queue size after clear: $size');
+    if (mediaItems.isNotEmpty) {
+      _audioHandler.addQueueItems(mediaItems);
+    }
+    print('[PageManager::loadFromMemory] Added ${mediaItems.length} songs to queue'); 
+    size = await _audioHandler.queue.value.length;
+    print('[PageManager::loadFromMemory] Queue size after Adding new Category songs: $size');
+  }
+
+  Future<void> _loadPlaylist({required String genre, String? category}) async {
     // Always reset play button state to stopped when switching genres
+    //somehow when switchings genres this code is not in picture at all
     _playButtonNotifier.setState(ButtonState.paused);
+    playlistNotifier.value = [];
+    currentSongTitleNotifier.value = '';
+    currentSongIdNotifier.value = '';
+    print('[PageManager] Calling clearQueue on handler: ${_audioHandler.runtimeType}');
+    await _audioHandler.customAction('clearQueue'); // force clear queue and player
+    print('[PageManager] After reset: playlistNotifier.value.length = ${playlistNotifier.value.length}');
+    print('[PageManager] AudioHandler queue.length = ${_audioHandler.queue.value.length}');
+    print('[PageManager] Play button state = ${_playButtonNotifier.value}');
+
     final songRepository = getIt<PlaylistRepository>();
-    final playlist = await songRepository.fetchInitialPlaylist(genre: genre);
+    final playlist = category != null
+        ? await songRepository.fetchPlaylistByGenreAndCategory(
+            genre: genre, category: category)
+        : await songRepository.fetchInitialPlaylist(genre: genre);
     final mediaItems = playlist
         .map((song) => MediaItem(
               id: song['id'] ?? '',
@@ -61,15 +112,6 @@ class PageManager {
     if (mediaItems.isEmpty) {
       // Aggressive reset: clear UI and audio handler state
       print('[PageManager] No media items for this genre. Clearing state.');
-      playlistNotifier.value = [];
-      currentSongTitleNotifier.value = '';
-      currentSongIdNotifier.value = '';
-      print('[PageManager] Calling clearQueue on handler: ${_audioHandler.runtimeType}'); 
-      await _audioHandler.customAction('clearQueue'); // force clear queue and player
-      _playButtonNotifier.setState(ButtonState.paused);
-      print('[PageManager] After reset: playlistNotifier.value.length = ${playlistNotifier.value.length}');
-      print('[PageManager] AudioHandler queue.length = ${_audioHandler.queue.value.length}');
-      print('[PageManager] Play button state = ${_playButtonNotifier.value}');
       return;
     }
     _audioHandler.addQueueItems(mediaItems);
@@ -77,13 +119,15 @@ class PageManager {
 
   void _listenToChangesInPlaylist() {
     _audioHandler.queue.listen((playlist) {
+      print('[PageManager::_listenToChangesInPlaylist] called. Playlist length: ${playlist.length}');
       if (playlist.isEmpty) {
+        print('[PageManager::_listenToChangesInPlaylist] Playlist is empty. Clearing playlistNotifier.');
         playlistNotifier.value = [];
         currentSongTitleNotifier.value = '';
         currentSongIdNotifier.value = '';
       } else {
-        //final newList = playlist.map((item) => item.title).toList();
         final newList = playlist.toList();
+        print('[PageManager::_listenToChangesInPlaylist] Setting playlistNotifier.value to list of length: ${newList.length}');
         playlistNotifier.value = newList;
       }
       _updateSkipButtons();
@@ -168,7 +212,7 @@ class PageManager {
     }
   }
 
-  void previous() =>  _audioHandler.skipToPrevious(); 
+  void previous() => _audioHandler.skipToPrevious();
   void next() => _audioHandler.skipToNext();
 
   void toggleRepeat() {
@@ -208,7 +252,7 @@ class PageManager {
       genre: song['genre'] ?? '',
     );
     int size = await _audioHandler.queue.value.length;
-    
+
     /*
     if (size >= 6) {
       await _audioHandler.removeQueueItemAt(0);
@@ -226,12 +270,12 @@ class PageManager {
   }
 
   void stop() {
+    if (!_isInitialized) return;
     _audioHandler.stop();
   }
 
   void dispose() {
+    _isInitialized = false;
     // Removed dispose call to keep player alive
   }
-
-  
 }
