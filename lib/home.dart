@@ -85,6 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: Icons.music_note,
                       label: 'Do Taal Slow',
                       onTap: () => _navigateToScreen(context, DoTaalSlowScreen()),
+                      isPaidOnly: true,
                     ),
                     _buildNavigationItem(
                       icon: Icons.music_note,
