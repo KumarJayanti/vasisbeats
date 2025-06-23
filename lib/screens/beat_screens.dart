@@ -85,7 +85,38 @@ class _BeatScreenState extends State<BeatScreen>
     setState(() {});
   }
 
-
+  String getCategoryImage(String category) {
+    switch (category) {
+      case 'K':
+        return 'images/k.png';
+      case 'KM':
+        return 'images/km.png';
+      case 'KMT':
+        return 'images/kmt.png';
+      case 'Short':
+        return 'images/short.png';
+      case 'Long':
+        return 'images/long.png';
+      default:
+        return 'images/appicon.png'; // fallback image
+    }
+  }
+  String getCategoryAltText(String category) {
+  switch (category) {
+    case 'K':
+      return 'K - Kartal Only';
+    case 'KM':
+      return 'KM - Kartal & Mridangam';
+    case 'KMT':
+      return 'KMT - Kartal & Mridangam  Tehai';
+    case 'Short':
+      return 'Changing Speed - Short Beats';
+    case 'Long':
+      return 'Changing Speed - Long Beats';
+    default:
+      return 'Category';
+  }
+}
 
   @override
   void dispose() {
@@ -126,7 +157,14 @@ class _BeatScreenState extends State<BeatScreen>
           bottom: TabBar(
             controller: _tabController,
             isScrollable: true,
-            tabs: _categories.map((cat) => Tab(text: cat)).toList(),
+            tabs: _categories.map((cat) => Tab(
+              icon: Image.asset(
+                getCategoryImage(cat),
+                width: 36,
+                height: 36,
+                semanticLabel: getCategoryAltText(cat),
+              ),
+            )).toList(),
           ),
         ),
         body: TabBarView(

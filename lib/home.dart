@@ -82,30 +82,34 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisSpacing: 20,
                   children: [
                     _buildNavigationItem(
-                      icon: Icons.music_note,
+                      imageAsset: 'images/do_taal.png',
                       label: 'Do Taal Slow',
                       onTap: () => _navigateToScreen(context, DoTaalSlowScreen()),
                       isPaidOnly: true,
                     ),
                     _buildNavigationItem(
                       icon: Icons.music_note,
+                      imageAsset: 'images/do_taal.png',
                       label: 'Do Taal Fast',
                       onTap: () => _navigateToScreen(context, DoTaalFastScreen()),
                       isPaidOnly: true,
                     ),
                     _buildNavigationItem(
                       icon: Icons.music_note,
+                      imageAsset: 'images/teen_taal.png',
                       label: 'Teen Taal Slow',
                       onTap: () => _navigateToScreen(context, TeenTaalSlowScreen()),
                     ),
                     _buildNavigationItem(
                       icon: Icons.music_note,
+                      imageAsset: 'images/teen_taal.png',
                       label: 'Teen Taal Fast',
                       onTap: () => _navigateToScreen(context, TeenTaalFastScreen()),
                       isPaidOnly: true,
                     ),
                     _buildNavigationItem(
                       icon: Icons.music_note,
+                      imageAsset: 'images/changing.png',
                       label: 'Changing Speeds',
                       onTap: () => _navigateToScreen(context, ChangingSpeedsScreen()),
                       isPaidOnly: true,
@@ -121,7 +125,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildNavigationItem({
-    required IconData icon,
+    IconData? icon,
+    String? imageAsset,
     required String label,
     required VoidCallback onTap,
     bool isPaidOnly = false,
@@ -145,11 +150,18 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 40,
-              color: Colors.white,
-            ),
+            if (imageAsset != null)
+              Image.asset(
+                imageAsset,
+                width: 40,
+                height: 40,
+              )
+            else if (icon != null)
+              Icon(
+                icon,
+                size: 40,
+                color: Colors.white,
+              ),
             SizedBox(height: 10),
             Text(
               label,

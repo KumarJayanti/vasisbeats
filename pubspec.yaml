@@ -60,6 +60,12 @@ flutter:
     - images/appicon.png
     - images/default_profile.png
     - images/upi_qr.png
+    - images/short.png
+    - images/long.png
+    - images/do_taal.png
+    - images/teen_taal.png
+    - images/changing.png
+  
 
 flutter_icons:
   android: true
