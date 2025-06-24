@@ -53,6 +53,18 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.purple,
+        leading: Navigator.of(context).canPop()
+            ? IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
+        title: Text('Home'),
+        centerTitle: true,
+        elevation: 0,
+      ),
       body: Container(
         decoration: BoxDecoration(
             image: DecorationImage(

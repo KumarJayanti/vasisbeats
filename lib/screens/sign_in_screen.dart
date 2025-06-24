@@ -283,20 +283,29 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text("Profile")),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _getUserData(user!.uid),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData)
-            return Center(child: CircularProgressIndicator());
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('images/vasis.jpeg'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Container(
+          color: Colors.black.withOpacity(0.3), // semi-transparent overlay for readability
+          child: FutureBuilder<Map<String, dynamic>>(
+            future: _getUserData(user!.uid),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData)
+                return Center(child: CircularProgressIndicator());
 
-          final data = snapshot.data!;
-          final userName = data['userName'] ?? "N/A";
-          final email = data['email'] ?? "N/A";
-          final accountType = data['role'] == 'admin'
-              ? "Paid (Admin)"
-              : data['account_type'] ?? "Free";
-          final donation = data['donation_amount'] ?? 0.0;
-          final isAdmin = data['is_admin'] ?? false;
+              final data = snapshot.data!;
+              final userName = data['userName'] ?? "N/A";
+              final email = data['email'] ?? "N/A";
+              final accountType = data['role'] == 'admin'
+                  ? "Paid (Admin)"
+                  : data['account_type'] ?? "Free";
+              final donation = data['donation_amount'] ?? 0.0;
+              final isAdmin = data['is_admin'] ?? false;
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -428,6 +437,8 @@ class ProfileScreen extends StatelessWidget {
           );
         },
       ),
+    )
+      )
     );
   }
 }

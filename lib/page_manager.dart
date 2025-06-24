@@ -70,16 +70,17 @@ class PageManager {
     currentSongTitleNotifier.value = '';
     currentSongIdNotifier.value = '';
 
-    print('[PageManager::loadFromMemory] Clearing queue before adding new category songs');
+    print(
+        '[PageManager::loadFromMemory] Clearing queue before adding new category songs');
     await _audioHandler.customAction('clearQueue');
-int size = await _audioHandler.queue.value.length;
-print('[PageManager::loadFromMemory] Queue size after clear: $size');
+    int size = await _audioHandler.queue.value.length;
+    //print('[PageManager::loadFromMemory] Queue size after clear: $size');
     if (mediaItems.isNotEmpty) {
       _audioHandler.addQueueItems(mediaItems);
     }
-    print('[PageManager::loadFromMemory] Added ${mediaItems.length} songs to queue'); 
+    //print('[PageManager::loadFromMemory] Added ${mediaItems.length} songs to queue');
     size = await _audioHandler.queue.value.length;
-    print('[PageManager::loadFromMemory] Queue size after Adding new Category songs: $size');
+    //print('[PageManager::loadFromMemory] Queue size after Adding new Category songs: $size');
   }
 
   Future<void> _loadPlaylist({required String genre, String? category}) async {
@@ -89,11 +90,12 @@ print('[PageManager::loadFromMemory] Queue size after clear: $size');
     playlistNotifier.value = [];
     currentSongTitleNotifier.value = '';
     currentSongIdNotifier.value = '';
-    print('[PageManager] Calling clearQueue on handler: ${_audioHandler.runtimeType}');
-    await _audioHandler.customAction('clearQueue'); // force clear queue and player
-    print('[PageManager] After reset: playlistNotifier.value.length = ${playlistNotifier.value.length}');
-    print('[PageManager] AudioHandler queue.length = ${_audioHandler.queue.value.length}');
-    print('[PageManager] Play button state = ${_playButtonNotifier.value}');
+    //print('[PageManager] Calling clearQueue on handler: ${_audioHandler.runtimeType}');
+    await _audioHandler
+        .customAction('clearQueue'); // force clear queue and player
+    //print('[PageManager] After reset: playlistNotifier.value.length = ${playlistNotifier.value.length}');
+    //print('[PageManager] AudioHandler queue.length = ${_audioHandler.queue.value.length}');
+    //print('[PageManager] Play button state = ${_playButtonNotifier.value}');
 
     final songRepository = getIt<PlaylistRepository>();
     final playlist = category != null
@@ -119,15 +121,15 @@ print('[PageManager::loadFromMemory] Queue size after clear: $size');
 
   void _listenToChangesInPlaylist() {
     _audioHandler.queue.listen((playlist) {
-      print('[PageManager::_listenToChangesInPlaylist] called. Playlist length: ${playlist.length}');
+      //print('[PageManager::_listenToChangesInPlaylist] called. Playlist length: ${playlist.length}');
       if (playlist.isEmpty) {
-        print('[PageManager::_listenToChangesInPlaylist] Playlist is empty. Clearing playlistNotifier.');
+        //print('[PageManager::_listenToChangesInPlaylist] Playlist is empty. Clearing playlistNotifier.');
         playlistNotifier.value = [];
         currentSongTitleNotifier.value = '';
         currentSongIdNotifier.value = '';
       } else {
         final newList = playlist.toList();
-        print('[PageManager::_listenToChangesInPlaylist] Setting playlistNotifier.value to list of length: ${newList.length}');
+        //print('[PageManager::_listenToChangesInPlaylist] Setting playlistNotifier.value to list of length: ${newList.length}');
         playlistNotifier.value = newList;
       }
       _updateSkipButtons();

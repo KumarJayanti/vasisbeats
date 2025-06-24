@@ -74,6 +74,7 @@ class MyApp extends StatefulWidget {
 }
 //https://storage.googleapis.com/vasis/vasis-sounds.zip
 //https://storage.googleapis.com/vasis/last_updated.txt
+//https://storage.googleapis.com/vasis/vasis-sounds-paid.zip
 
 
 class _MyAppState extends State<MyApp> {

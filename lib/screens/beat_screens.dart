@@ -128,7 +128,7 @@ class _BeatScreenState extends State<BeatScreen>
 
   @override
   Widget build(BuildContext context) {
-    print('[BeatScreen] build() called. _selectedCategory: \\$_selectedCategory');
+    //print('[BeatScreen] build() called. _selectedCategory: \\$_selectedCategory');
     if (_categories.isEmpty) {
       return Scaffold(
         appBar: AppBar(
@@ -154,17 +154,24 @@ class _BeatScreenState extends State<BeatScreen>
             icon: Icon(Icons.arrow_back),
             onPressed: () => Navigator.pop(context),
           ),
-          bottom: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            tabs: _categories.map((cat) => Tab(
-              icon: Image.asset(
-                getCategoryImage(cat),
-                width: 36,
-                height: 36,
-                semanticLabel: getCategoryAltText(cat),
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(60),
+            child: Container(
+              width: double.infinity,
+              height: 60,
+              child: TabBar(
+                controller: _tabController,
+                isScrollable: false,
+                tabs: _categories.map((cat) => Tab(
+                  icon: Image.asset(
+                    getCategoryImage(cat),
+                    width: 40, // slightly larger
+                    height: 40,
+                    semanticLabel: getCategoryAltText(cat),
+                  ),
+                )).toList(),
               ),
-            )).toList(),
+            ),
           ),
         ),
         body: TabBarView(
@@ -242,11 +249,11 @@ class Playlist extends StatelessWidget {
     if (!isCurrent) {
       return Center(child: Text('Switch to this tab to play beats.'));
     }
-    print('[Playlist] ValueListenableBuilder is building. playlistNotifier.value.length: ${pageManager.playlistNotifier.value.length}');
+    //print('[Playlist] ValueListenableBuilder is building. playlistNotifier.value.length: ${pageManager.playlistNotifier.value.length}');
   return ValueListenableBuilder<List<MediaItem>>(
     valueListenable: pageManager.playlistNotifier,
     builder: (context, playlist, _) {
-        print('[Playlist] UI ListView.builder received playlist of length: ${playlist.length}');
+        //print('[Playlist] UI ListView.builder received playlist of length: ${playlist.length}');
       return ListView.builder(
         itemCount: playlist.length,
           itemBuilder: (context, index) {

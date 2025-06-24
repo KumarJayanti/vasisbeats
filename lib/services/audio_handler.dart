@@ -25,7 +25,7 @@ class MyAudioHandler extends BaseAudioHandler {
     // Clear the handler queue
     queue.add([]);
     mediaItem.add(null);
-    print('[MyAudioHandler] clearQueue: queue and player cleared.');
+    //print('[MyAudioHandler] clearQueue: queue and player cleared.');
   }
 
   final _player = AudioPlayer();
@@ -117,7 +117,7 @@ class MyAudioHandler extends BaseAudioHandler {
       final sequence = sequenceState?.effectiveSequence;
       if (sequence == null || sequence.isEmpty) return;
       final items = sequence.map((source) => source.tag as MediaItem);
-      print('[MyAudioHandler::_listenForSequenceStateChanges] Adding queue of length: ${items.length}');
+      //print('[MyAudioHandler::_listenForSequenceStateChanges] Adding queue of length: ${items.length}');
       queue.add(items.toList());
     });
   }
@@ -125,18 +125,18 @@ class MyAudioHandler extends BaseAudioHandler {
   @override
   Future<dynamic> customAction(String name,
       [Map<String, dynamic>? extras]) async {
-    print('[MyAudioHandler] customAction CALLED with name: $name');
-    print('1.Clearing queue...');
+    //print('[MyAudioHandler] customAction CALLED with name: $name');
+    //print('1.Clearing queue...');
     switch (name) {
       case 'clearQueue':
-        print('2.Clearing queue...');
+        //print('2.Clearing queue...');
         queue.add([]);
         mediaItem.add(null);
         playbackState.add(playbackState.value.copyWith(
           processingState: AudioProcessingState.idle,
           playing: false,
         ));
-        print('Queue cleared');
+        //print('Queue cleared');
         return 'Queue cleared';
         break;
       case 'dispose':
