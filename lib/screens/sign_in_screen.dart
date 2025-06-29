@@ -420,12 +420,20 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ElevatedButton(
                       onPressed: () {
+                        // Determine user status: paid or free
+                        String userStatus = "free";
+                        // Treat as paid if admin or account_type is paid or donation_amount > 0
+                        if ((data['role'] == 'admin') ||
+                            (data['account_type'] == 'paid') ||
+                            ((data['donation_amount'] ?? 0.0) > 0.0)) {
+                          userStatus = "paid";
+                        }
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (_) => data['beatsReady'] == true
                                   ? HomeScreen()
-                                  : SplashScreen()),
+                                  : SplashScreen(userStatus: userStatus)),
                         );
                       },
                       child: Text("Go to Beats"),

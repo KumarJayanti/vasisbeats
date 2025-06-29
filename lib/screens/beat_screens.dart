@@ -79,8 +79,8 @@ class _BeatScreenState extends State<BeatScreen>
         .where((song) => song['category'] == category)
         .toList();
    //print beats length and the song names  
-    print('[_loadCategoryBeats] beats length: ${beats.length}');
-    beats.forEach((song) => print('[_loadCategoryBeats] song name: ${song['title']}'));
+    //print('[_loadCategoryBeats] beats length: ${beats.length}');
+    //beats.forEach((song) => print('[_loadCategoryBeats] song name: ${song['title']}'));
     await _pageManager.loadFromMemory(beats);
     setState(() {});
   }

@@ -104,24 +104,24 @@ class DemoPlaylist extends PlaylistRepository {
   }
 
   Future<List<Map<String, String>>> fetchInitialPlaylist({required String genre}) async {
-  print('[fetchInitialPlaylist] Called with genre: $genre');
-    print('[fetchInitialPlaylist] Called with genre: $genre');
+  //print('[fetchInitialPlaylist] Called with genre: $genre');
+    //print('[fetchInitialPlaylist] Called with genre: $genre');
     // Defensive: ensure songsNew is initialized
     if (!isSongsNewInitialized() || baseURL.isEmpty) {
-      print('[fetchInitialPlaylist] Initializing songsNew and baseURL...');
+      //print('[fetchInitialPlaylist] Initializing songsNew and baseURL...');
       await _initDir();
     }
     if (!isSongsNewInitialized()) {
-      print('[fetchInitialPlaylist] ERROR: songsNew still not initialized after _initDir!');
+      //print('[fetchInitialPlaylist] ERROR: songsNew still not initialized after _initDir!');
       return [];
     }
-    print('[fetchInitialPlaylist] songsNew has \'${songsNew.length}\' songs.');
+    //print('[fetchInitialPlaylist] songsNew has \'${songsNew.length}\' songs.');
     // Filter songs by genre
     final List<dynamic> filteredRawSongs =
         songsNew.where((song) => song['genre'] == genre).toList();
-    print('[fetchInitialPlaylist] Found ${filteredRawSongs.length} songs for genre: $genre');
+    //print('[fetchInitialPlaylist] Found ${filteredRawSongs.length} songs for genre: $genre');
     if (filteredRawSongs.isNotEmpty) {
-      print('[fetchInitialPlaylist] First song title: \'${filteredRawSongs[0]['title']}\'');
+      //print('[fetchInitialPlaylist] First song title: \'${filteredRawSongs[0]['title']}\'');
     }
 
     // Convert each song from Map<String, dynamic> to Map<String, String>

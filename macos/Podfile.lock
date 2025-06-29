@@ -1216,6 +1216,11 @@ PODS:
     - Firebase/Firestore (~> 11.13.0)
     - firebase_core
     - FlutterMacOS
+  - cloud_functions (5.5.2):
+    - Firebase/CoreOnly (~> 11.13.0)
+    - Firebase/Functions (~> 11.13.0)
+    - firebase_core
+    - FlutterMacOS
   - device_info_plus (0.0.1):
     - FlutterMacOS
   - Firebase/Auth (11.13.0):
@@ -1226,6 +1231,9 @@ PODS:
   - Firebase/Firestore (11.13.0):
     - Firebase/CoreOnly
     - FirebaseFirestore (~> 11.13.0)
+  - Firebase/Functions (11.13.0):
+    - Firebase/CoreOnly
+    - FirebaseFunctions (~> 11.13.0)
   - firebase_auth (5.5.4):
     - Firebase/Auth (~> 11.13.0)
     - Firebase/CoreOnly (~> 11.13.0)
@@ -1273,6 +1281,15 @@ PODS:
     - gRPC-Core (~> 1.69.0)
     - leveldb-library (~> 1.22)
     - nanopb (~> 3.30910.0)
+  - FirebaseFunctions (11.13.0):
+    - FirebaseAppCheckInterop (~> 11.0)
+    - FirebaseAuthInterop (~> 11.0)
+    - FirebaseCore (~> 11.13.0)
+    - FirebaseCoreExtension (~> 11.13.0)
+    - FirebaseMessagingInterop (~> 11.0)
+    - FirebaseSharedSwift (~> 11.0)
+    - GTMSessionFetcher/Core (< 5.0, >= 3.4)
+  - FirebaseMessagingInterop (11.14.0)
   - FirebaseSharedSwift (11.14.0)
   - FlutterMacOS (1.0.0)
   - google_sign_in_ios (0.0.1):
@@ -1439,6 +1456,7 @@ DEPENDENCIES:
   - audio_session (from `Flutter/ephemeral/.symlinks/plugins/audio_session/macos`)
   - audioplayers_darwin (from `Flutter/ephemeral/.symlinks/plugins/audioplayers_darwin/macos`)
   - cloud_firestore (from `Flutter/ephemeral/.symlinks/plugins/cloud_firestore/macos`)
+  - cloud_functions (from `Flutter/ephemeral/.symlinks/plugins/cloud_functions/macos`)
   - device_info_plus (from `Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos`)
   - firebase_auth (from `Flutter/ephemeral/.symlinks/plugins/firebase_auth/macos`)
   - firebase_core (from `Flutter/ephemeral/.symlinks/plugins/firebase_core/macos`)
@@ -1466,6 +1484,8 @@ SPEC REPOS:
     - FirebaseCoreInternal
     - FirebaseFirestore
     - FirebaseFirestoreInternal
+    - FirebaseFunctions
+    - FirebaseMessagingInterop
     - FirebaseSharedSwift
     - GoogleSignIn
     - GoogleUtilities
@@ -1486,6 +1506,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/audioplayers_darwin/macos
   cloud_firestore:
     :path: Flutter/ephemeral/.symlinks/plugins/cloud_firestore/macos
+  cloud_functions:
+    :path: Flutter/ephemeral/.symlinks/plugins/cloud_functions/macos
   device_info_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos
   firebase_auth:
@@ -1518,6 +1540,7 @@ SPEC CHECKSUMS:
   audioplayers_darwin: dcad41de4fbd0099cb3749f7ab3b0cb8f70b810c
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
   cloud_firestore: d34908376e18469872332afef90891e76282155a
+  cloud_functions: 29e63b3c177720f117edd0f0a2d6a75de16227c8
   device_info_plus: ce1b7762849d3ec103d0e0517299f2db7ad60720
   Firebase: 3435bc66b4d494c2f22c79fd3aae4c1db6662327
   firebase_auth: da56863bb5f06b7406ef9edc4511922eeb4b5604
@@ -1530,6 +1553,8 @@ SPEC CHECKSUMS:
   FirebaseCoreInternal: 29d7b3af4aaf0b8f3ed20b568c13df399b06f68c
   FirebaseFirestore: 3ae3aeaad5b5ef5ec0dba86882a7156f509ff480
   FirebaseFirestoreInternal: 6c8aa676751593471f66d857db5b8674ea66116b
+  FirebaseFunctions: 57b6625728d4b171731b6883d49f136bbddcefc8
+  FirebaseMessagingInterop: c07695471ba98ec7d4ffeb3491c34c105f8e8fcc
   FirebaseSharedSwift: bdd5c8674c4712a98e70287c936bc5cca5d640f6
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
   google_sign_in_ios: 7411fab6948df90490dc4620ecbcabdc3ca04017

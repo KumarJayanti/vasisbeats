@@ -1,8 +1,14 @@
 import Cocoa
 import FlutterMacOS
+import FirebaseCore // ✅ Needed for FirebaseApp
 
 @main
 class AppDelegate: FlutterAppDelegate {
+  override func applicationDidFinishLaunching(_ notification: Notification) {
+    FirebaseApp.configure() // ✅ This initializes Firebase natively
+    super.applicationDidFinishLaunching(notification)
+  }
+
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
     return true
   }
@@ -11,3 +17,4 @@ class AppDelegate: FlutterAppDelegate {
     return true
   }
 }
+

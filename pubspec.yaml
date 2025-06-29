@@ -43,7 +43,8 @@ dependencies:
   shared_preferences: ^2.0.0
   audioplayers: ^5.2.1  # Downgrade to a compatible version
   audioplayers_darwin: ^5.0.2  # Specify compatible version
-  
+  cloud_functions: ^5.5.2
+
 dev_dependencies:
   flutter_lints: ^3.0.2
   flutter_test:
