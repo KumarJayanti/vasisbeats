@@ -443,7 +443,7 @@ class ProfileScreen extends StatelessWidget {
               ],
             ),
           );
-        },
+        }
       ),
     )
       )

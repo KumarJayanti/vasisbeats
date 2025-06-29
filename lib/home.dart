@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:item_selector/item_selector.dart';
 import 'package:flutter/foundation.dart';
@@ -30,6 +31,106 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _downloading = false;
   bool _beatsReady = true;
+
+  void _showRatingDialog(BuildContext context) {
+    double rating = 3.0;
+    TextEditingController controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Rate Our App'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return IconButton(
+                        icon: Icon(
+                          index < rating ? Icons.star : Icons.star_border,
+                          color: Colors.amber,
+                          size: 32,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            rating = index + 1.0;
+                          });
+                        },
+                      );
+                    }),
+                  ),
+                  TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      hintText: 'Optional feedback',
+                    ),
+                    maxLines: 2,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  child: Text('Cancel'),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                ElevatedButton(
+                  child: Text('Submit'),
+                  onPressed: () async {
+                    const playStoreUrl = 'https://play.google.com/store/apps/details?id=dev.suragch.flutter_audio_service_demo';
+                    const appStoreUrl = 'https://apps.apple.com/app/id1624246378';
+                    const macAppStoreUrl = 'https://apps.apple.com/app/id1625800928';
+                    final inAppReview = InAppReview.instance;
+                    bool didRequest = false;
+                    try {
+                      if (await inAppReview.isAvailable()) {
+                        await inAppReview.requestReview();
+                        didRequest = true;
+                      } else {
+                        // Fallback by platform
+                        if (Theme.of(context).platform == TargetPlatform.android) {
+                          if (await canLaunch(playStoreUrl)) {
+                            await launch(playStoreUrl);
+                          }
+                        } else if (Theme.of(context).platform == TargetPlatform.iOS) {
+                          if (await canLaunch(appStoreUrl)) {
+                            await launch(appStoreUrl);
+                          }
+                        } else if (Theme.of(context).platform == TargetPlatform.macOS) {
+                          if (await canLaunch(macAppStoreUrl)) {
+                            await launch(macAppStoreUrl);
+                          }
+                        }
+                      }
+                    } catch (e) {
+                      // Fallback in case of error
+                      if (Theme.of(context).platform == TargetPlatform.android) {
+                        if (await canLaunch(playStoreUrl)) {
+                          await launch(playStoreUrl);
+                        }
+                      } else if (Theme.of(context).platform == TargetPlatform.iOS) {
+                        if (await canLaunch(appStoreUrl)) {
+                          await launch(appStoreUrl);
+                        }
+                      } else if (Theme.of(context).platform == TargetPlatform.macOS) {
+                        if (await canLaunch(macAppStoreUrl)) {
+                          await launch(macAppStoreUrl);
+                        }
+                      }
+                    }
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -64,6 +165,13 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('Home'),
         centerTitle: true,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.star_rate),
+            tooltip: 'Rate Us',
+            onPressed: () => _showRatingDialog(context),
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
