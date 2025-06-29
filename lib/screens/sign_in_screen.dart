@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../splash.dart';
 import '../home.dart';
 import '../utils.dart';
@@ -233,7 +235,7 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
             ],
           ),
         ),
-      ),
+      )
     );
   }
 }
@@ -255,6 +257,7 @@ Future<void> createOrUpdateUserInFirestore(User user) async {
       'account_type': 'free',
       'donation_amount': 0.0,
       'created_at': FieldValue.serverTimestamp(),
+      'photo_url': 'https://storage.googleapis.com/vasis/default_profile.png',
     });
   }
 }
@@ -264,22 +267,21 @@ class ProfileScreen extends StatelessWidget {
 
   ProfileScreen({required this.beatsReady});
 
-  Future<Map<String, dynamic>> _getUserData(String uid) async {
-    final doc =
-        await FirebaseFirestore.instance.collection('users').doc(uid).get();
-    final data = doc.data() ?? {};
-    final isAdmin =
-        (await FirebaseFirestore.instance.collection('admins').doc(uid).get())
-            .exists;
-    return {
-      ...data,
-      'is_admin': isAdmin,
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final userName = user?.displayName ?? (user?.email?.split('@').first ?? "N/A");
+    final email = user?.email ?? "N/A";
+
+    Future<Map<String, dynamic>> _getUserData(String uid) async {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      final data = doc.data() ?? {};
+      final isAdmin = (await FirebaseFirestore.instance.collection('admins').doc(uid).get()).exists;
+      return {
+        ...data,
+        'is_admin': isAdmin,
+      };
+    }
 
     return Scaffold(
       appBar: AppBar(title: Text("Profile")),
@@ -307,17 +309,48 @@ class ProfileScreen extends StatelessWidget {
               final donation = data['donation_amount'] ?? 0.0;
               final isAdmin = data['is_admin'] ?? false;
 
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
                 // User Info + Profile Pic
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundImage: AssetImage('images/default_profile.png'),
+                    Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundImage: (FirebaseAuth.instance.currentUser?.photoURL != null && FirebaseAuth.instance.currentUser!.photoURL!.isNotEmpty)
+                            ? NetworkImage(FirebaseAuth.instance.currentUser!.photoURL!)
+                            : AssetImage('images/default_profile.png') as ImageProvider,
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: () async {
+                              final picker = ImagePicker();
+                              final user = FirebaseAuth.instance.currentUser;
+                              if (user == null) return;
+                              final picked = await picker.pickImage(source: ImageSource.gallery);
+                              if (picked == null) return;
+                              final ref = FirebaseStorage.instance.ref().child('profile_photos/${user.uid}.jpg');
+                              await ref.putData(await picked.readAsBytes());
+                              final url = await ref.getDownloadURL();
+                              await user.updatePhotoURL(url);
+                              await user.reload();
+                              // ignore: use_build_context_synchronously
+                              (context as Element).markNeedsBuild();
+                            },
+                            child: CircleAvatar(
+                              radius: 14,
+                              backgroundColor: Colors.white,
+                              child: Icon(Icons.edit, size: 16, color: Colors.black),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     SizedBox(width: 20),
                     Expanded(
@@ -331,8 +364,7 @@ class ProfileScreen extends StatelessWidget {
                               Text("Username: $userName"),
                               Text("Email: $email"),
                               Text("Account Type: $accountType"),
-                              Text(
-                                  "Donation Amount: \$${donation.toStringAsFixed(1)}"),
+                              Text("Donation Amount: \$${donation.toStringAsFixed(1)}"),
                             ],
                           ),
                         ),

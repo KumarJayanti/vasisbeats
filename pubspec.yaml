@@ -31,6 +31,7 @@ dependencies:
   animated_text_kit: ^4.2.2
   file_manager: ^1.0.0
   in_app_review: ^2.0.8
+  image_picker: ^1.0.7
   awesome_snackbar_content:
   catcher:
     path: ../catcher
@@ -45,6 +46,7 @@ dependencies:
   audioplayers: ^5.2.1  # Downgrade to a compatible version
   audioplayers_darwin: ^5.0.2  # Specify compatible version
   cloud_functions: ^5.5.2
+  firebase_storage: ^12.4.7
 
 dev_dependencies:
   flutter_lints: ^3.0.2

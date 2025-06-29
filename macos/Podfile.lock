@@ -1223,6 +1223,8 @@ PODS:
     - FlutterMacOS
   - device_info_plus (0.0.1):
     - FlutterMacOS
+  - file_selector_macos (0.0.1):
+    - FlutterMacOS
   - Firebase/Auth (11.13.0):
     - Firebase/CoreOnly
     - FirebaseAuth (~> 11.13.0)
@@ -1234,6 +1236,9 @@ PODS:
   - Firebase/Functions (11.13.0):
     - Firebase/CoreOnly
     - FirebaseFunctions (~> 11.13.0)
+  - Firebase/Storage (11.13.0):
+    - Firebase/CoreOnly
+    - FirebaseStorage (~> 11.13.0)
   - firebase_auth (5.5.4):
     - Firebase/Auth (~> 11.13.0)
     - Firebase/CoreOnly (~> 11.13.0)
@@ -1241,6 +1246,11 @@ PODS:
     - FlutterMacOS
   - firebase_core (3.14.0):
     - Firebase/CoreOnly (~> 11.13.0)
+    - FlutterMacOS
+  - firebase_storage (12.4.7):
+    - Firebase/CoreOnly (~> 11.13.0)
+    - Firebase/Storage (~> 11.13.0)
+    - firebase_core
     - FlutterMacOS
   - FirebaseAppCheckInterop (11.14.0)
   - FirebaseAuth (11.13.0):
@@ -1291,6 +1301,13 @@ PODS:
     - GTMSessionFetcher/Core (< 5.0, >= 3.4)
   - FirebaseMessagingInterop (11.14.0)
   - FirebaseSharedSwift (11.14.0)
+  - FirebaseStorage (11.13.0):
+    - FirebaseAppCheckInterop (~> 11.0)
+    - FirebaseAuthInterop (~> 11.0)
+    - FirebaseCore (~> 11.13.0)
+    - FirebaseCoreExtension (~> 11.13.0)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GTMSessionFetcher/Core (< 5.0, >= 3.4)
   - FlutterMacOS (1.0.0)
   - google_sign_in_ios (0.0.1):
     - AppAuth (>= 1.7.4)
@@ -1460,8 +1477,10 @@ DEPENDENCIES:
   - cloud_firestore (from `Flutter/ephemeral/.symlinks/plugins/cloud_firestore/macos`)
   - cloud_functions (from `Flutter/ephemeral/.symlinks/plugins/cloud_functions/macos`)
   - device_info_plus (from `Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos`)
+  - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
   - firebase_auth (from `Flutter/ephemeral/.symlinks/plugins/firebase_auth/macos`)
   - firebase_core (from `Flutter/ephemeral/.symlinks/plugins/firebase_core/macos`)
+  - firebase_storage (from `Flutter/ephemeral/.symlinks/plugins/firebase_storage/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - google_sign_in_ios (from `Flutter/ephemeral/.symlinks/plugins/google_sign_in_ios/darwin`)
   - in_app_review (from `Flutter/ephemeral/.symlinks/plugins/in_app_review/macos`)
@@ -1490,6 +1509,7 @@ SPEC REPOS:
     - FirebaseFunctions
     - FirebaseMessagingInterop
     - FirebaseSharedSwift
+    - FirebaseStorage
     - GoogleSignIn
     - GoogleUtilities
     - "gRPC-C++"
@@ -1513,10 +1533,14 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/cloud_functions/macos
   device_info_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos
+  file_selector_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos
   firebase_auth:
     :path: Flutter/ephemeral/.symlinks/plugins/firebase_auth/macos
   firebase_core:
     :path: Flutter/ephemeral/.symlinks/plugins/firebase_core/macos
+  firebase_storage:
+    :path: Flutter/ephemeral/.symlinks/plugins/firebase_storage/macos
   FlutterMacOS:
     :path: Flutter/ephemeral
   google_sign_in_ios:
@@ -1547,9 +1571,11 @@ SPEC CHECKSUMS:
   cloud_firestore: d34908376e18469872332afef90891e76282155a
   cloud_functions: 29e63b3c177720f117edd0f0a2d6a75de16227c8
   device_info_plus: ce1b7762849d3ec103d0e0517299f2db7ad60720
+  file_selector_macos: cc3858c981fe6889f364731200d6232dac1d812d
   Firebase: 3435bc66b4d494c2f22c79fd3aae4c1db6662327
   firebase_auth: da56863bb5f06b7406ef9edc4511922eeb4b5604
   firebase_core: 071e73c34a225e1e1e492b7023c7c0b99b0f2a2f
+  firebase_storage: b1e262da2c76a9d7feb4f114940d7d24f665b311
   FirebaseAppCheckInterop: a92ba81d0ee3c4cddb1a2e52c668ea51dc63c3ae
   FirebaseAuth: 175cb5503dfdb52191b8ff81cdd52c1d9dee9ac9
   FirebaseAuthInterop: e25b58ecb90f3285085fa2118861a3c9dfdc62ad
@@ -1561,6 +1587,7 @@ SPEC CHECKSUMS:
   FirebaseFunctions: 57b6625728d4b171731b6883d49f136bbddcefc8
   FirebaseMessagingInterop: c07695471ba98ec7d4ffeb3491c34c105f8e8fcc
   FirebaseSharedSwift: bdd5c8674c4712a98e70287c936bc5cca5d640f6
+  FirebaseStorage: 2a3e5402a565e06e121308dadfe0626976fd6b45
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
   google_sign_in_ios: 7411fab6948df90490dc4620ecbcabdc3ca04017
   GoogleSignIn: ce8c89bb9b37fb624b92e7514cc67335d1e277e4
