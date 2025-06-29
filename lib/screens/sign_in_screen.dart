@@ -168,75 +168,93 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      appBar: AppBar(title: Text("Email Link Sign-In")),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (currentUser != null) ...[
-                Text("👋 Welcome, ${currentUser.email}"),
-                SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) =>
-                            ProfileScreen(beatsReady: widget.beatsReady)),
-                  ),
-                  child: Text("Go to Profile"),
-                ),
-                ElevatedButton(
-                  onPressed: _signOut,
-                  child: Text("Sign Out"),
-                ),
-              ] else ...[
-                Text("Enter your email to receive a sign-in link:"),
-                TextField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(labelText: "Email"),
-                ),
-                SizedBox(height: 20),
-                _isSendingLink
-                    ? CircularProgressIndicator()
-                    : ElevatedButton(
-                        onPressed: _sendSignInLink,
-                        child: Text("Send Sign-In Link"),
-                      ),
-                if (_linkSent)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Text(
-                      "✅ Email sent. Please check your inbox.",
-                      style: TextStyle(color: Colors.green),
-                    ),
-                  ),
-                if (Platform.isMacOS) ...[
-                  SizedBox(height: 30),
-                  Text("Paste the sign-in link you received:"),
-                  TextField(
-                    controller: _linkController,
-                    decoration:
-                        InputDecoration(labelText: "Email sign-in link"),
-                  ),
-                  SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: _signInManually,
-                    child: Text("Sign In with Link"),
-                  ),
-                ],
-              ],
-              if (_isSigningIn) ...[
-                SizedBox(height: 20),
-                CircularProgressIndicator(),
-              ]
-            ],
+        appBar: AppBar(
+  title: Text("Email Link Sign-In"),
+  backgroundColor: Colors.purple,
+),
+        body: Stack(children: [
+          // Background image
+          Positioned.fill(
+            child: Image.asset(
+              'images/vasis.jpeg',
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
-      )
-    );
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (currentUser != null) ...[
+                    Text("👋 Welcome, ${currentUser.email}"),
+                    SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                ProfileScreen(beatsReady: widget.beatsReady)),
+                      ),
+                      child: Text("Go to Profile"),
+                    ),
+                    ElevatedButton(
+                      onPressed: _signOut,
+                      child: Text("Sign Out"),
+                    ),
+                  ] else ...[
+                    Text("Enter your email to receive a sign-in link:",   style: TextStyle(color: Colors.purple),),
+                    TextField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      style: TextStyle(color: Colors.purple),
+                      decoration: InputDecoration(
+                        labelText: "Email",
+                        labelStyle: TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    _isSendingLink
+                        ? CircularProgressIndicator()
+                        : ElevatedButton(
+                            onPressed: _sendSignInLink,
+                            child: Text("Send Sign-In Link"),
+                          ),
+                    if (_linkSent)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Text(
+                          "✅ Email sent. Please check your inbox.",
+                          style: TextStyle(color: Colors.green),
+                        ),
+                      ),
+                    if (Platform.isMacOS) ...[
+                      SizedBox(height: 30),
+                      Text("Paste the sign-in link you received:", style: TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold),),
+                      TextField(
+                        controller: _linkController,
+                        style: TextStyle(color: Colors.purple),
+                        decoration: InputDecoration(
+                          labelText: "Email sign-in link",
+                          labelStyle: TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: _signInManually,
+                        child: Text("Sign In with Link"),
+                      ),
+                    ],
+                  ],
+                  if (_isSigningIn) ...[
+                    SizedBox(height: 20),
+                    CircularProgressIndicator(),
+                  ]
+                ],
+              ),
+            ),
+          )
+        ]));
   }
 }
 
@@ -270,13 +288,17 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final userName = user?.displayName ?? (user?.email?.split('@').first ?? "N/A");
+    final userName =
+        user?.displayName ?? (user?.email?.split('@').first ?? "N/A");
     final email = user?.email ?? "N/A";
 
     Future<Map<String, dynamic>> _getUserData(String uid) async {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      final doc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
       final data = doc.data() ?? {};
-      final isAdmin = (await FirebaseFirestore.instance.collection('admins').doc(uid).get()).exists;
+      final isAdmin =
+          (await FirebaseFirestore.instance.collection('admins').doc(uid).get())
+              .exists;
       return {
         ...data,
         'is_admin': isAdmin,
@@ -284,201 +306,226 @@ class ProfileScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text("Profile")),
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('images/vasis.jpeg'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Container(
-          color: Colors.black.withOpacity(0.3), // semi-transparent overlay for readability
-          child: FutureBuilder<Map<String, dynamic>>(
-            future: _getUserData(user!.uid),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData)
-                return Center(child: CircularProgressIndicator());
+        appBar: AppBar(
+  title: Text("Profile"),
+  backgroundColor: Colors.purple,
+),
+        body: Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('images/vasis.jpeg'),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Container(
+              color: Colors.black
+                  .withOpacity(0.3), // semi-transparent overlay for readability
+              child: FutureBuilder<Map<String, dynamic>>(
+                  future: _getUserData(user!.uid),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData)
+                      return Center(child: CircularProgressIndicator());
 
-              final data = snapshot.data!;
-              final userName = data['userName'] ?? "N/A";
-              final email = data['email'] ?? "N/A";
-              final accountType = data['role'] == 'admin'
-                  ? "Paid (Admin)"
-                  : data['account_type'] ?? "Free";
-              final donation = data['donation_amount'] ?? 0.0;
-              final isAdmin = data['is_admin'] ?? false;
+                    final data = snapshot.data!;
+                    final userName = data['userName'] ?? "N/A";
+                    final email = data['email'] ?? "N/A";
+                    final accountType = data['role'] == 'admin'
+                        ? "Paid (Admin)"
+                        : data['account_type'] ?? "Free";
+                    final donation = data['donation_amount'] ?? 0.0;
+                    final isAdmin = data['is_admin'] ?? false;
 
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                // User Info + Profile Pic
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 40,
-                          backgroundImage: (FirebaseAuth.instance.currentUser?.photoURL != null && FirebaseAuth.instance.currentUser!.photoURL!.isNotEmpty)
-                            ? NetworkImage(FirebaseAuth.instance.currentUser!.photoURL!)
-                            : AssetImage('images/default_profile.png') as ImageProvider,
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: GestureDetector(
-                            onTap: () async {
-                              final picker = ImagePicker();
-                              final user = FirebaseAuth.instance.currentUser;
-                              if (user == null) return;
-                              final picked = await picker.pickImage(source: ImageSource.gallery);
-                              if (picked == null) return;
-                              final ref = FirebaseStorage.instance.ref().child('profile_photos/${user.uid}.jpg');
-                              await ref.putData(await picked.readAsBytes());
-                              final url = await ref.getDownloadURL();
-                              await user.updatePhotoURL(url);
-                              await user.reload();
-                              // ignore: use_build_context_synchronously
-                              (context as Element).markNeedsBuild();
-                            },
-                            child: CircleAvatar(
-                              radius: 14,
-                              backgroundColor: Colors.white,
-                              child: Icon(Icons.edit, size: 16, color: Colors.black),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(width: 20),
-                    Expanded(
-                      child: Card(
-                        elevation: 4,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
+                    return Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          // User Info + Profile Pic
+                          Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text("Username: $userName"),
-                              Text("Email: $email"),
-                              Text("Account Type: $accountType"),
-                              Text("Donation Amount: \$${donation.toStringAsFixed(1)}"),
+                              Stack(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 40,
+                                    backgroundImage: (FirebaseAuth.instance
+                                                    .currentUser?.photoURL !=
+                                                null &&
+                                            FirebaseAuth.instance.currentUser!
+                                                .photoURL!.isNotEmpty)
+                                        ? NetworkImage(FirebaseAuth
+                                            .instance.currentUser!.photoURL!)
+                                        : AssetImage(
+                                                'images/default_profile.png')
+                                            as ImageProvider,
+                                  ),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        final picker = ImagePicker();
+                                        final user =
+                                            FirebaseAuth.instance.currentUser;
+                                        if (user == null) return;
+                                        final picked = await picker.pickImage(
+                                            source: ImageSource.gallery);
+                                        if (picked == null) return;
+                                        final ref = FirebaseStorage.instance
+                                            .ref()
+                                            .child(
+                                                'profile_photos/${user.uid}.jpg');
+                                        await ref.putData(
+                                            await picked.readAsBytes());
+                                        final url = await ref.getDownloadURL();
+                                        await user.updatePhotoURL(url);
+                                        await user.reload();
+                                        // ignore: use_build_context_synchronously
+                                        (context as Element).markNeedsBuild();
+                                      },
+                                      child: CircleAvatar(
+                                        radius: 14,
+                                        backgroundColor: Colors.white,
+                                        child: Icon(Icons.edit,
+                                            size: 16, color: Colors.black),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(width: 20),
+                              Expanded(
+                                child: Card(
+                                  elevation: 4,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text("Username: $userName"),
+                                        Text("Email: $email"),
+                                        Text("Account Type: $accountType"),
+                                        Text(
+                                            "Donation Amount: \$${donation.toStringAsFixed(1)}"),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 30),
+                          SizedBox(height: 30),
 
-                // Donate Section
-                Card(
-                  elevation: 4,
-                  margin: EdgeInsets.symmetric(vertical: 20),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                            "Donate to Vasis Studios and Send Details to vasisbeats@gmail.com",
-                            style: Theme.of(context).textTheme.titleMedium),
-                        SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Column(
-                              children: [
-                                Image.asset(
-                                  'images/upi_qr.png',
-                                  height: 160,
-                                  width: 160,
-                                  fit: BoxFit.contain, // Ensures no distortion
-                                ),
-                                SizedBox(height: 10),
-                                Text("Donate with UPI"),
-                              ],
+                          // Donate Section
+                          Card(
+                            elevation: 4,
+                            margin: EdgeInsets.symmetric(vertical: 20),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                      "Donate to Vasis Studios and Send Details to vasisbeats@gmail.com",
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium),
+                                  SizedBox(height: 16),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Column(
+                                        children: [
+                                          Image.asset(
+                                            'images/upi_qr.png',
+                                            height: 160,
+                                            width: 160,
+                                            fit: BoxFit
+                                                .contain, // Ensures no distortion
+                                          ),
+                                          SizedBox(height: 10),
+                                          Text("Donate with UPI"),
+                                        ],
+                                      ),
+                                      Column(
+                                        children: [
+                                          ElevatedButton.icon(
+                                            onPressed: () {
+                                              launchUrl(Uri.parse(
+                                                  "https://www.paypal.com/paypalme/bhagavatikumar"));
+                                            },
+                                            icon: Icon(Icons.payment),
+                                            label: Text("Donate via PayPal"),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                            Column(
-                              children: [
-                                ElevatedButton.icon(
+                          ),
+
+                          Spacer(),
+
+                          // Footer buttons
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () async {
+                                  await FirebaseAuth.instance.signOut();
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (_) => EmailLinkSignInScreen(
+                                            beatsReady: true)),
+                                    (_) => false,
+                                  );
+                                },
+                                child: Text("Sign Out"),
+                              ),
+                              if (isAdmin)
+                                ElevatedButton(
                                   onPressed: () {
-                                    launchUrl(Uri.parse(
-                                        "https://www.paypal.com/paypalme/bhagavatikumar"));
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (_) =>
+                                                AdminPanelScreen()));
                                   },
-                                  icon: Icon(Icons.payment),
-                                  label: Text("Donate via PayPal"),
+                                  child: Text("Admin Panel"),
                                 ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                Spacer(),
-
-                // Footer buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () async {
-                        await FirebaseAuth.instance.signOut();
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) =>
-                                  EmailLinkSignInScreen(beatsReady: true)),
-                          (_) => false,
-                        );
-                      },
-                      child: Text("Sign Out"),
-                    ),
-                    if (isAdmin)
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => AdminPanelScreen()));
-                        },
-                        child: Text("Admin Panel"),
+                              ElevatedButton(
+                                onPressed: () {
+                                  // Determine user status: paid or free
+                                  String userStatus = "free";
+                                  // Treat as paid if admin or account_type is paid or donation_amount > 0
+                                  if ((data['role'] == 'admin') ||
+                                      (data['account_type'] == 'paid') ||
+                                      ((data['donation_amount'] ?? 0.0) >
+                                          0.0)) {
+                                    userStatus = "paid";
+                                  }
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (_) =>
+                                            data['beatsReady'] == true
+                                                ? HomeScreen()
+                                                : SplashScreen(
+                                                    userStatus: userStatus)),
+                                  );
+                                },
+                                child: Text("Go to Beats"),
+                              ),
+                            ],
+                          )
+                        ],
                       ),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Determine user status: paid or free
-                        String userStatus = "free";
-                        // Treat as paid if admin or account_type is paid or donation_amount > 0
-                        if ((data['role'] == 'admin') ||
-                            (data['account_type'] == 'paid') ||
-                            ((data['donation_amount'] ?? 0.0) > 0.0)) {
-                          userStatus = "paid";
-                        }
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => data['beatsReady'] == true
-                                  ? HomeScreen()
-                                  : SplashScreen(userStatus: userStatus)),
-                        );
-                      },
-                      child: Text("Go to Beats"),
-                    ),
-                  ],
-                )
-              ],
-            ),
-          );
-        }
-      ),
-    )
-      )
-    );
+                    );
+                  }),
+            )));
   }
 }

@@ -15,6 +15,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Admin Panel'),
+        backgroundColor: Colors.purple,
         leading: BackButton(onPressed: () => Navigator.pop(context)),
       ),
       body: StreamBuilder<QuerySnapshot>(
