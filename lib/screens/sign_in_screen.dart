@@ -114,6 +114,7 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
     if (email.isEmpty) return;
 
     setState(() => _isSendingLink = true);
+    /*
     final actionCodeSettings = ActionCodeSettings(
       url: 'https://vasis-beats.web.app/emailSignInRedirect',
       handleCodeInApp: true,
@@ -123,6 +124,15 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
       androidInstallApp: false,
       androidMinimumVersion: '21',
       //dynamicLinkDomain: 'vasisbeats.page.link',
+    );*/
+
+    final actionCodeSettings = ActionCodeSettings(
+      url: 'https://vasis-beats.web.app/emailSignInRedirect',
+      handleCodeInApp: true,
+      iOSBundleId: 'dev.spiritsoft.flutterAudioServiceDemo',
+      androidPackageName: 'dev.suragch.flutter_audio_service_demo',
+      androidInstallApp: false,
+      androidMinimumVersion: '21',
     );
 
     try {
@@ -169,9 +179,9 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
 
     return Scaffold(
         appBar: AppBar(
-  title: Text("Email Link Sign-In"),
-  backgroundColor: Colors.purple,
-),
+          title: Text("Email Link Sign-In"),
+          backgroundColor: Colors.purple,
+        ),
         body: Stack(children: [
           // Background image
           Positioned.fill(
@@ -203,14 +213,19 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
                       child: Text("Sign Out"),
                     ),
                   ] else ...[
-                    Text("Enter your email to receive a sign-in link:",   style: TextStyle(color: Colors.purple),),
+                    Text(
+                      "Enter your email to receive a sign-in link:",
+                      style: TextStyle(color: Colors.purple),
+                    ),
                     TextField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       style: TextStyle(color: Colors.purple),
                       decoration: InputDecoration(
                         labelText: "Email",
-                        labelStyle: TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold),
+                        labelStyle: TextStyle(
+                            color: Colors.purpleAccent,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                     SizedBox(height: 20),
@@ -230,13 +245,20 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
                       ),
                     if (Platform.isMacOS) ...[
                       SizedBox(height: 30),
-                      Text("Paste the sign-in link you received:", style: TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold),),
+                      Text(
+                        "Paste the sign-in link you received:",
+                        style: TextStyle(
+                            color: Colors.purpleAccent,
+                            fontWeight: FontWeight.bold),
+                      ),
                       TextField(
                         controller: _linkController,
                         style: TextStyle(color: Colors.purple),
                         decoration: InputDecoration(
                           labelText: "Email sign-in link",
-                          labelStyle: TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold),
+                          labelStyle: TextStyle(
+                              color: Colors.purpleAccent,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                       SizedBox(height: 10),
@@ -307,9 +329,9 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
         appBar: AppBar(
-  title: Text("Profile"),
-  backgroundColor: Colors.purple,
-),
+          title: Text("Profile"),
+          backgroundColor: Colors.purple,
+        ),
         body: Container(
             decoration: BoxDecoration(
               image: DecorationImage(

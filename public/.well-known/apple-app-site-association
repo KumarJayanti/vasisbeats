@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "L35TJZA3UC.dev.spiritsoft.flutterAudioServiceDemo",
+        "paths": [ "/signin/*", "/profile/*", "/*", "*" ]
+      }
+    ]
+  }
+}

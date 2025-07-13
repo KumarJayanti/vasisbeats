@@ -70,8 +70,8 @@ class PageManager {
     currentSongTitleNotifier.value = '';
     currentSongIdNotifier.value = '';
 
-    print(
-        '[PageManager::loadFromMemory] Clearing queue before adding new category songs');
+    //print(
+    //    '[PageManager::loadFromMemory] Clearing queue before adding new category songs');
     await _audioHandler.customAction('clearQueue');
     int size = await _audioHandler.queue.value.length;
     //print('[PageManager::loadFromMemory] Queue size after clear: $size');
