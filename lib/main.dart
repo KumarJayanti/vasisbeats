@@ -89,74 +89,64 @@ class _MyAppState extends State<MyApp> {
   }
 
   void initDeepLinkHandler() {
-  // This stream emits links when the app is running or resumed.
   _appLinks.uriLinkStream.listen((Uri uri) async {
     print('[DeepLink] Received URI: ' + uri.toString());
-    // SNACKBAR DEBUG START
-    final ctx = Catcher.navigatorKey.currentState?.overlay?.context;
-    if (ctx != null) {
-      ScaffoldMessenger.of(ctx).showSnackBar(
-        SnackBar(content: Text('[DeepLink] Received URI: ${uri.toString()}')),
-      );
+
+    // Only process valid Firebase sign-in links
+    final isSignInLink = FirebaseAuth.instance.isSignInWithEmailLink(uri.toString());
+    if (!isSignInLink) {
+      _showDeepLinkSnackBar('Not a valid sign-in link');
+      print('[DeepLink] Not a valid sign-in link');
+      return;
     }
-    // SNACKBAR DEBUG END
-    if (uri != null && FirebaseAuth.instance.isSignInWithEmailLink(uri.toString())) {
-      final email = await getStoredEmail();
-      print('[DeepLink] Found email: ' + (email ?? 'null'));
-      // SNACKBAR DEBUG START
-      if (ctx != null) {
-        ScaffoldMessenger.of(ctx).showSnackBar(
-          SnackBar(content: Text('[DeepLink] Found email: ${email ?? 'null'}')),
+
+    // Get the stored email (and clear after use)
+    final email = await getStoredEmail();
+    print('[DeepLink] Found email: ${email ?? 'null'}');
+    if (email == null) {
+      _showDeepLinkSnackBar('No email found for sign-in. Please request a new link.');
+      return;
+    }
+
+    try {
+      final cred = await FirebaseAuth.instance.signInWithEmailLink(
+        email: email,
+        emailLink: uri.toString(),
+      );
+      print('[DeepLink] signInWithEmailLink SUCCESS: ${cred.user?.uid ?? "NO USER"}');
+      // Clear stored email after successful sign-in
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('email_for_signin');
+      // Navigate to ProfileScreen
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(Catcher.navigatorKey!.currentState!.overlay!.context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => ProfileScreen(beatsReady: true),
+          ),
         );
-      }
-      // SNACKBAR DEBUG END
-      if (email != null) {
-        try {
-          final cred = await FirebaseAuth.instance.signInWithEmailLink(
-            email: email,
-            emailLink: uri.toString(),
-          );
-          print('[DeepLink] signInWithEmailLink SUCCESS: ${cred.user?.uid ?? "NO USER"}');
-          // SNACKBAR DEBUG START
-          if (ctx != null) {
-            ScaffoldMessenger.of(ctx).showSnackBar(
-              SnackBar(content: Text('[DeepLink] signInWithEmailLink SUCCESS: ${cred.user?.uid ?? "NO USER"}')),
-            );
-          }
-          // SNACKBAR DEBUG END
-        } catch (e) {
-          print('[DeepLink] signInWithEmailLink ERROR: $e');
-          // SNACKBAR DEBUG START
-          if (ctx != null) {
-            ScaffoldMessenger.of(ctx).showSnackBar(
-              SnackBar(content: Text('[DeepLink] signInWithEmailLink ERROR: $e')),
-            );
-          }
-          // SNACKBAR DEBUG END
-        }
+      });
+    } catch (e) {
+      print('[DeepLink] signInWithEmailLink ERROR: $e');
+      // If the error is invalid/expired link, prompt the user to request a new link
+      if (e.toString().contains('invalid-action-code')) {
+        _showDeepLinkSnackBar('The sign-in link is invalid or expired. Please request a new link.');
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('email_for_signin');
       } else {
-        print("[DeepLink] No email found for sign-in");
-        // SNACKBAR DEBUG START
-        if (ctx != null) {
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            SnackBar(content: Text('[DeepLink] No email found for sign-in')),
-          );
-        }
-        // SNACKBAR DEBUG END
+        _showDeepLinkSnackBar('Sign-in failed: $e');
       }
-    } else {
-      print('[DeepLink] URI is not a valid sign-in link');
-      // SNACKBAR DEBUG START
-      if (ctx != null) {
-        ScaffoldMessenger.of(ctx).showSnackBar(
-          SnackBar(content: Text('[DeepLink] URI is not a valid sign-in link')),
-        );
-      }
-      // SNACKBAR DEBUG END
     }
   });
 }
 
+void _showDeepLinkSnackBar(String message) {
+  final ctx = Catcher.navigatorKey!.currentState!.overlay!.context;
+  if (ctx != null) {
+    ScaffoldMessenger.of(ctx).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+}
 
   @override
   void initState() {
