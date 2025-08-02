@@ -234,6 +234,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: () => _navigateToScreen(context, ChangingSpeedsScreen()),
                       isPaidOnly: true,
                     ),
+                    _buildNavigationItem(
+                      icon: Icons.more_horiz, // golden icon for Others
+                      label: 'Future',
+                      onTap: () => _navigateToScreen(context, BeatScreen(title: 'Others', genre: 'others')),
+                      isPaidOnly: false,
+                    ),
                   ],
                 ),
               ),
@@ -280,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Icon(
                 icon,
                 size: 40,
-                color: Colors.white,
+                color: label == 'Future' ? Colors.amber : Colors.white,
               ),
             SizedBox(height: 10),
             Text(

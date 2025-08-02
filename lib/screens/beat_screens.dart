@@ -39,7 +39,7 @@ class _BeatScreenState extends State<BeatScreen>
   Future<void> _initGenreData() async {
     final repo = getIt<PlaylistRepository>() as dynamic;
     // Fetch all beats for this genre once
-    _allBeatsForGenre = await repo.fetchInitialPlaylist(genre: widget.genre);
+    _allBeatsForGenre = await repo.fetchInitialPlaylist(genre: widget.genre == 'future' ? 'future' : widget.genre);
     // Dynamically extract unique categories from the fetched beats
     _categories = _allBeatsForGenre != null
         ? _allBeatsForGenre!
@@ -55,7 +55,7 @@ class _BeatScreenState extends State<BeatScreen>
     // Set default category
     _selectedCategory = _categories.isNotEmpty ? _categories[0] : null;
     // Ensure PageManager is initialized for this genre, but do NOT load a playlist yet
-    await _pageManager.init(genre: widget.genre, loadPlaylist: false);
+    await _pageManager.init(genre: widget.genre == 'future' ? 'future' : widget.genre, loadPlaylist: false);
     // Now load only the selected category's beats
     if (_selectedCategory != null) {
       await _loadCategoryBeats(_selectedCategory!);
@@ -489,6 +489,6 @@ class TeenTaalFastScreen extends StatelessWidget {
 class ChangingSpeedsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BeatScreen(title: 'Changing Speeds', genre: 'changing_speeds');
+    return BeatScreen(title: 'Future', genre: 'future');
   }
 }
