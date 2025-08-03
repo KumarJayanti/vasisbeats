@@ -4,6 +4,10 @@
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
+.pub-cache/
+.pub/
+build/
+.metadata
 pubspec.lock
 
 # Android NDK build artifacts
@@ -27,6 +31,8 @@ macos/.DS_Store
 
 # macOS specific
 .DS_Store
+.metadata
+macos/RunnerTests/
 
 # IDE specific
 .idea/

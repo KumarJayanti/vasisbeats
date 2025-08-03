@@ -441,48 +441,81 @@ class ProfileScreen extends StatelessWidget {
                           // Donate Section
                           Card(
                             elevation: 4,
-                            margin: EdgeInsets.symmetric(vertical: 20),
+                            margin: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                      "Donate to Vasis Studios and Send Details to vasisbeats@gmail.com",
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium),
+                                    "Donate USD 5\$ or more to Vasis Studios and Send Details to vasiskirtan@gmail.com",
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                  ),
                                   SizedBox(height: 16),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      Column(
+                                  LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      // On smaller screens, stack the items vertically
+                                      if (constraints.maxWidth < 600) {
+                                        return Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Column(
+                                              children: [
+                                                Image.asset(
+                                                  'images/upi_qr.png',
+                                                  height: 160,
+                                                  width: 160,
+                                                  fit: BoxFit.contain,
+                                                ),
+                                                SizedBox(height: 10),
+                                                Text("Donate with UPI"),
+                                                SizedBox(height: 20),
+                                              ],
+                                            ),
+                                            ElevatedButton.icon(
+                                              onPressed: () {
+                                                launchUrl(Uri.parse(
+                                                    "https://www.paypal.com/paypalme/nityakishore/5USD"));
+                                              },
+                                              icon: Icon(Icons.payment),
+                                              label: Text("Donate via PayPal"),
+                                            ),
+                                          ],
+                                        );
+                                      }
+                                      // On larger screens, show items side by side
+                                      return Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          Image.asset(
-                                            'images/upi_qr.png',
-                                            height: 160,
-                                            width: 160,
-                                            fit: BoxFit
-                                                .contain, // Ensures no distortion
+                                          Column(
+                                            children: [
+                                              Image.asset(
+                                                'images/upi_qr.png',
+                                                height: 160,
+                                                width: 160,
+                                                fit: BoxFit.contain,
+                                              ),
+                                              SizedBox(height: 10),
+                                              Text("Donate with UPI"),
+                                            ],
                                           ),
-                                          SizedBox(height: 10),
-                                          Text("Donate with UPI"),
-                                        ],
-                                      ),
-                                      Column(
-                                        children: [
-                                          ElevatedButton.icon(
-                                            onPressed: () {
-                                              launchUrl(Uri.parse(
-                                                  "https://www.paypal.com/paypalme/bhagavatikumar"));
-                                            },
-                                            icon: Icon(Icons.payment),
-                                            label: Text("Donate via PayPal"),
+                                          SizedBox(width: 20),
+                                          Column(
+                                            children: [
+                                              ElevatedButton.icon(
+                                                onPressed: () {
+                                                  launchUrl(Uri.parse(
+                                                      "https://www.paypal.com/paypalme/nityakishore/5USD"));
+                                                },
+                                                icon: Icon(Icons.payment),
+                                                label: Text("Donate via PayPal"),
+                                              ),
+                                            ],
                                           ),
                                         ],
-                                      ),
-                                    ],
+                                      );
+                                    },
                                   ),
                                 ],
                               ),
