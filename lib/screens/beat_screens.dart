@@ -489,6 +489,6 @@ class TeenTaalFastScreen extends StatelessWidget {
 class ChangingSpeedsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BeatScreen(title: 'Future', genre: 'future');
+    return BeatScreen(title: 'Changing Speeds', genre: 'changing_speeds');
   }
 }

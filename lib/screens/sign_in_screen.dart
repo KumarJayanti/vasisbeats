@@ -302,10 +302,75 @@ Future<void> createOrUpdateUserInFirestore(User user) async {
   }
 }
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   final bool beatsReady;
 
   ProfileScreen({required this.beatsReady});
+  
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+  bool _isEditing = false;
+  bool _isUpdating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    _nameController = TextEditingController(
+      text: user?.displayName ?? (user?.email?.split('@').first ?? ""),
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _updateDisplayName() async {
+    final newName = _nameController.text.trim();
+    if (newName.isEmpty) return;
+
+    setState(() => _isUpdating = true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Update in Firebase Auth
+        await user.updateDisplayName(newName);
+        await user.reload();
+        
+        // Update in Firestore
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+          'userName': newName,
+          'updated_at': FieldValue.serverTimestamp(),
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Username updated successfully')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update username: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUpdating = false;
+          _isEditing = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -424,7 +489,77 @@ class ProfileScreen extends StatelessWidget {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text("Username: $userName"),
+                                        Row(
+                                          children: [
+                                            Text("Username: "),
+                                            if (!_isEditing) ...[
+                                              Text(
+                                                userName,
+                                                style: TextStyle(fontWeight: FontWeight.bold),
+                                              ),
+                                              IconButton(
+                                                icon: Icon(Icons.edit, size: 18),
+                                                onPressed: () {
+                                                  _nameController.text = userName;
+                                                  setState(() {
+                                                    _isEditing = true;
+                                                  });
+                                                },
+                                                padding: EdgeInsets.zero,
+                                                constraints: BoxConstraints(),
+                                              ),
+                                            ] else
+                                              Expanded(
+                                                child: Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: TextFormField(
+                                                        controller: _nameController,
+                                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                                        decoration: InputDecoration(
+                                                          isDense: true,
+                                                          contentPadding: EdgeInsets.zero,
+                                                          border: InputBorder.none,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    if (_isUpdating)
+                                                      Padding(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                                        child: SizedBox(
+                                                          width: 16,
+                                                          height: 16,
+                                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                                        ),
+                                                      )
+                                                    else
+                                                      Row(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          IconButton(
+                                                            icon: Icon(Icons.check, size: 18, color: Colors.green),
+                                                            onPressed: _updateDisplayName,
+                                                            padding: EdgeInsets.zero,
+                                                            constraints: BoxConstraints(),
+                                                          ),
+                                                          IconButton(
+                                                            icon: Icon(Icons.close, size: 18, color: Colors.red),
+                                                            onPressed: () {
+                                                              setState(() {
+                                                                _isEditing = false;
+                                                              });
+                                                            },
+                                                            padding: EdgeInsets.zero,
+                                                            constraints: BoxConstraints(),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                  ],
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 8),
                                         Text("Email: $email"),
                                         Text("Account Type: $accountType"),
                                         Text(
