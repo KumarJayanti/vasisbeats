@@ -32,104 +32,112 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _downloading = false;
   bool _beatsReady = true;
 
-  void _showRatingDialog(BuildContext context) {
-    double rating = 3.0;
-    TextEditingController controller = TextEditingController();
+  // App Store URLs - Update these with your actual app's store URLs before publishing
+  static const String _playStoreUrl = 'https://play.google.com/store/apps/details?id=YOUR_ANDROID_PACKAGE_NAME';
+  static const String _appStoreUrl = 'https://apps.apple.com/app/idYOUR_IOS_APP_ID';
+  static const String _macAppStoreUrl = 'https://apps.apple.com/app/idYOUR_MAC_APP_ID';
 
-    showDialog(
+  Future<void> _showRatingDialog(BuildContext context) async {
+    double rating = 3.0;
+    final controller = TextEditingController();
+    final inAppReview = InAppReview.instance;
+    
+    final shouldShowDialog = await showDialog<bool>(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text('Rate Our App'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (index) {
-                      return IconButton(
-                        icon: Icon(
-                          index < rating ? Icons.star : Icons.star_border,
-                          color: Colors.amber,
-                          size: 32,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            rating = index + 1.0;
-                          });
-                        },
-                      );
-                    }),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Rate Our App'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('How would you rate our app?'),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) => IconButton(
+                  icon: Icon(
+                    index < rating ? Icons.star : Icons.star_border,
+                    color: Colors.amber,
+                    size: 32,
                   ),
-                  TextField(
-                    controller: controller,
-                    decoration: InputDecoration(
-                      hintText: 'Optional feedback',
-                    ),
-                    maxLines: 2,
-                  ),
-                ],
+                  onPressed: () => setState(() => rating = index + 1.0),
+                )),
               ),
-              actions: [
-                TextButton(
-                  child: Text('Cancel'),
-                  onPressed: () => Navigator.of(context).pop(),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  hintText: 'Optional feedback',
+                  border: OutlineInputBorder(),
                 ),
-                ElevatedButton(
-                  child: Text('Submit'),
-                  onPressed: () async {
-                    const playStoreUrl = 'https://play.google.com/store/apps/details?id=dev.suragch.flutter_audio_service_demo';
-                    const appStoreUrl = 'https://apps.apple.com/app/id1624246378';
-                    const macAppStoreUrl = 'https://apps.apple.com/app/id1625800928';
-                    final inAppReview = InAppReview.instance;
-                    bool didRequest = false;
-                    try {
-                      if (await inAppReview.isAvailable()) {
-                        await inAppReview.requestReview();
-                        didRequest = true;
-                      } else {
-                        // Fallback by platform
-                        if (Theme.of(context).platform == TargetPlatform.android) {
-                          if (await canLaunch(playStoreUrl)) {
-                            await launch(playStoreUrl);
-                          }
-                        } else if (Theme.of(context).platform == TargetPlatform.iOS) {
-                          if (await canLaunch(appStoreUrl)) {
-                            await launch(appStoreUrl);
-                          }
-                        } else if (Theme.of(context).platform == TargetPlatform.macOS) {
-                          if (await canLaunch(macAppStoreUrl)) {
-                            await launch(macAppStoreUrl);
-                          }
-                        }
-                      }
-                    } catch (e) {
-                      // Fallback in case of error
-                      if (Theme.of(context).platform == TargetPlatform.android) {
-                        if (await canLaunch(playStoreUrl)) {
-                          await launch(playStoreUrl);
-                        }
-                      } else if (Theme.of(context).platform == TargetPlatform.iOS) {
-                        if (await canLaunch(appStoreUrl)) {
-                          await launch(appStoreUrl);
-                        }
-                      } else if (Theme.of(context).platform == TargetPlatform.macOS) {
-                        if (await canLaunch(macAppStoreUrl)) {
-                          await launch(macAppStoreUrl);
-                        }
-                      }
-                    }
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
-            );
-          },
-        );
-      },
+                maxLines: 3,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('CANCEL'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('SUBMIT'),
+            ),
+          ],
+        ),
+      ),
     );
+
+    if (shouldShowDialog != true) return;
+
+    // Log the rating and feedback (you can implement your analytics here)
+    debugPrint('User rating: $rating');
+    if (controller.text.isNotEmpty) {
+      debugPrint('User feedback: ${controller.text}');
+    }
+
+    // Try to show the in-app review dialog
+    try {
+      if (await inAppReview.isAvailable()) {
+        await inAppReview.requestReview();
+        return;
+      }
+    } catch (e) {
+      debugPrint('Error showing in-app review: $e');
+    }
+
+    // Fallback: Open store page
+    try {
+      String storeUrl;
+      final platform = Theme.of(context).platform;
+      
+      if (platform == TargetPlatform.android) {
+        storeUrl = _playStoreUrl;
+      } else if (platform == TargetPlatform.iOS) {
+        storeUrl = _appStoreUrl;
+      } else if (platform == TargetPlatform.macOS) {
+        storeUrl = _macAppStoreUrl;
+      } else {
+        throw UnsupportedError('Platform not supported for app reviews');
+      }
+
+      if (await canLaunch(storeUrl)) {
+        await launch(storeUrl);
+      } else {
+        throw Exception('Could not launch store URL: $storeUrl');
+      }
+    } catch (e) {
+      debugPrint('Error opening store: $e');
+      if (!context.mounted) return;
+      
+      // Show error message to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not open app store. Please try again later.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
