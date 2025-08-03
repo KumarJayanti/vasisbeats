@@ -162,6 +162,12 @@ class _BeatScreenState extends State<BeatScreen>
               child: TabBar(
                 controller: _tabController,
                 isScrollable: false,
+                indicator: BoxDecoration(
+                  color: Colors.white.withOpacity(0.3), // Semi-transparent white for selected tab
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelPadding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                 tabs: _categories.map((cat) => Tab(
                   icon: Image.asset(
                     getCategoryImage(cat),
