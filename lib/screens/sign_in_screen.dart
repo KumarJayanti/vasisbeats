@@ -425,158 +425,161 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     return Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // User Info + Profile Pic
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Stack(
+                          // User Info Card with Profile Pic
+                          Card(
+                            elevation: 4,
+                            color: Colors.white.withOpacity(0.7), // Semi-transparent white
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  CircleAvatar(
-                                    radius: 40,
-                                    backgroundImage: (FirebaseAuth.instance
-                                                    .currentUser?.photoURL !=
-                                                null &&
-                                            FirebaseAuth.instance.currentUser!
-                                                .photoURL!.isNotEmpty)
-                                        ? NetworkImage(FirebaseAuth
-                                            .instance.currentUser!.photoURL!)
-                                        : AssetImage(
-                                                'images/default_profile.png')
-                                            as ImageProvider,
-                                  ),
-                                  Positioned(
-                                    bottom: 0,
-                                    right: 0,
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        final picker = ImagePicker();
-                                        final user =
-                                            FirebaseAuth.instance.currentUser;
-                                        if (user == null) return;
-                                        final picked = await picker.pickImage(
-                                            source: ImageSource.gallery);
-                                        if (picked == null) return;
-                                        final ref = FirebaseStorage.instance
-                                            .ref()
-                                            .child(
-                                                'profile_photos/${user.uid}.jpg');
-                                        await ref.putData(
-                                            await picked.readAsBytes());
-                                        final url = await ref.getDownloadURL();
-                                        await user.updatePhotoURL(url);
-                                        await user.reload();
-                                        // ignore: use_build_context_synchronously
-                                        (context as Element).markNeedsBuild();
-                                      },
-                                      child: CircleAvatar(
-                                        radius: 14,
-                                        backgroundColor: Colors.white,
-                                        child: Icon(Icons.edit,
-                                            size: 16, color: Colors.black),
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Profile Picture
+                                      Stack(
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 40,
+                                            backgroundImage: (FirebaseAuth.instance.currentUser?.photoURL != null &&
+                                                    FirebaseAuth.instance.currentUser!.photoURL!.isNotEmpty)
+                                                ? NetworkImage(FirebaseAuth.instance.currentUser!.photoURL!)
+                                                : AssetImage('images/default_profile.png') as ImageProvider,
+                                          ),
+                                          Positioned(
+                                            bottom: 0,
+                                            right: 0,
+                                            child: GestureDetector(
+                                              onTap: () async {
+                                                final picker = ImagePicker();
+                                                final user = FirebaseAuth.instance.currentUser;
+                                                if (user == null) return;
+                                                final picked = await picker.pickImage(source: ImageSource.gallery);
+                                                if (picked == null) return;
+                                                final ref = FirebaseStorage.instance
+                                                    .ref()
+                                                    .child('profile_photos/${user.uid}.jpg');
+                                                await ref.putData(await picked.readAsBytes());
+                                                final url = await ref.getDownloadURL();
+                                                await user.updatePhotoURL(url);
+                                                await user.reload();
+                                                // ignore: use_build_context_synchronously
+                                                (context as Element).markNeedsBuild();
+                                              },
+                                              child: CircleAvatar(
+                                                radius: 14,
+                                                backgroundColor: Colors.white,
+                                                child: Icon(Icons.edit, size: 16, color: Colors.black),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
+                                      SizedBox(width: 20),
+                                      // User Details
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Text("Username: "),
+                                                if (!_isEditing) ...[
+                                                  Text(
+                                                    userName,
+                                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                                  ),
+                                                  IconButton(
+                                                    icon: Icon(Icons.edit, size: 18),
+                                                    onPressed: () {
+                                                      _nameController.text = userName;
+                                                      setState(() {
+                                                        _isEditing = true;
+                                                      });
+                                                    },
+                                                    padding: EdgeInsets.zero,
+                                                    constraints: BoxConstraints(),
+                                                  ),
+                                                ] else
+                                                  Expanded(
+                                                    child: Row(
+                                                      children: [
+                                                        Expanded(
+                                                          child: TextFormField(
+                                                            controller: _nameController,
+                                                            style: TextStyle(fontWeight: FontWeight.bold),
+                                                            decoration: InputDecoration(
+                                                              isDense: true,
+                                                              contentPadding: EdgeInsets.zero,
+                                                              border: InputBorder.none,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        if (_isUpdating)
+                                                          Padding(
+                                                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                                            child: SizedBox(
+                                                              width: 16,
+                                                              height: 16,
+                                                              child: CircularProgressIndicator(strokeWidth: 2),
+                                                            ),
+                                                          )
+                                                        else
+                                                          Row(
+                                                            mainAxisSize: MainAxisSize.min,
+                                                            children: [
+                                                              IconButton(
+                                                                icon: Icon(Icons.check, size: 18, color: Colors.green),
+                                                                onPressed: _updateDisplayName,
+                                                                padding: EdgeInsets.zero,
+                                                                constraints: BoxConstraints(),
+                                                              ),
+                                                              IconButton(
+                                                                icon: Icon(Icons.close, size: 18, color: Colors.red),
+                                                                onPressed: () {
+                                                                  setState(() {
+                                                                    _isEditing = false;
+                                                                  });
+                                                                },
+                                                                padding: EdgeInsets.zero,
+                                                                constraints: BoxConstraints(),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                            SizedBox(height: 8),
+                                            Text("Email: $email"),
+                                            Text("Account Type: $accountType"),
+                                            Text("Donation Amount: \$${donation.toStringAsFixed(1)}"),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                              SizedBox(width: 20),
-                              Expanded(
-                                child: Card(
-                                  elevation: 4,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Text("Username: "),
-                                            if (!_isEditing) ...[
-                                              Text(
-                                                userName,
-                                                style: TextStyle(fontWeight: FontWeight.bold),
-                                              ),
-                                              IconButton(
-                                                icon: Icon(Icons.edit, size: 18),
-                                                onPressed: () {
-                                                  _nameController.text = userName;
-                                                  setState(() {
-                                                    _isEditing = true;
-                                                  });
-                                                },
-                                                padding: EdgeInsets.zero,
-                                                constraints: BoxConstraints(),
-                                              ),
-                                            ] else
-                                              Expanded(
-                                                child: Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: TextFormField(
-                                                        controller: _nameController,
-                                                        style: TextStyle(fontWeight: FontWeight.bold),
-                                                        decoration: InputDecoration(
-                                                          isDense: true,
-                                                          contentPadding: EdgeInsets.zero,
-                                                          border: InputBorder.none,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    if (_isUpdating)
-                                                      Padding(
-                                                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                                        child: SizedBox(
-                                                          width: 16,
-                                                          height: 16,
-                                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                                        ),
-                                                      )
-                                                    else
-                                                      Row(
-                                                        mainAxisSize: MainAxisSize.min,
-                                                        children: [
-                                                          IconButton(
-                                                            icon: Icon(Icons.check, size: 18, color: Colors.green),
-                                                            onPressed: _updateDisplayName,
-                                                            padding: EdgeInsets.zero,
-                                                            constraints: BoxConstraints(),
-                                                          ),
-                                                          IconButton(
-                                                            icon: Icon(Icons.close, size: 18, color: Colors.red),
-                                                            onPressed: () {
-                                                              setState(() {
-                                                                _isEditing = false;
-                                                              });
-                                                            },
-                                                            padding: EdgeInsets.zero,
-                                                            constraints: BoxConstraints(),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                  ],
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 8),
-                                        Text("Email: $email"),
-                                        Text("Account Type: $accountType"),
-                                        Text(
-                                            "Donation Amount: \$${donation.toStringAsFixed(1)}"),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                          SizedBox(height: 30),
+                          SizedBox(height: 20),
 
                           // Donate Section
                           Card(
                             elevation: 4,
-                            margin: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                            margin: EdgeInsets.zero,
+                            color: Colors.white.withOpacity(0.7), // Semi-transparent white
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Column(
@@ -638,13 +641,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           SizedBox(width: 20),
                                           Column(
                                             children: [
-                                              ElevatedButton.icon(
-                                                onPressed: () {
-                                                  launchUrl(Uri.parse(
-                                                      "https://www.paypal.com/paypalme/nityakishore/5USD"));
-                                                },
-                                                icon: Icon(Icons.payment),
-                                                label: Text("Donate via PayPal"),
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    colors: [
+                                                      Colors.purple[700]!,
+                                                      Colors.purple[500]!,
+                                                      Colors.purple[700]!,
+                                                    ],
+                                                    begin: Alignment.topCenter,
+                                                    end: Alignment.bottomCenter,
+                                                  ),
+                                                  borderRadius: BorderRadius.circular(4),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.purple.withOpacity(0.3),
+                                                      spreadRadius: 1,
+                                                      blurRadius: 4,
+                                                      offset: Offset(0, 2),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: ElevatedButton.icon(
+                                                  onPressed: () {
+                                                    launchUrl(Uri.parse(
+                                                        "https://www.paypal.com/paypalme/nityakishore/5USD"));
+                                                  },
+                                                  icon: Icon(Icons.payment, color: Colors.white),
+                                                  label: Text("Donate via PayPal", style: TextStyle(color: Colors.white)),
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor: Colors.transparent,
+                                                    shadowColor: Colors.transparent,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(4),
+                                                    ),
+                                                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                                  ),
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -663,52 +696,142 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              ElevatedButton(
-                                onPressed: () async {
-                                  await FirebaseAuth.instance.signOut();
-                                  Navigator.pushAndRemoveUntil(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => EmailLinkSignInScreen(
-                                            beatsReady: true)),
-                                    (_) => false,
-                                  );
-                                },
-                                child: Text("Sign Out"),
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.purple[700]!,
+                                      Colors.purple[500]!,
+                                      Colors.purple[700]!,
+                                    ],
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                  ),
+                                  borderRadius: BorderRadius.circular(4),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.purple.withOpacity(0.3),
+                                      spreadRadius: 1,
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    await FirebaseAuth.instance.signOut();
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) => EmailLinkSignInScreen(
+                                              beatsReady: true)),
+                                      (_) => false,
+                                    );
+                                  },
+                                  child: Text("Sign Out", style: TextStyle(color: Colors.white)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  ),
+                                ),
                               ),
                               if (isAdmin)
-                                ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (_) =>
-                                                AdminPanelScreen()));
-                                  },
-                                  child: Text("Admin Panel"),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.purple[700]!,
+                                        Colors.purple[500]!,
+                                        Colors.purple[700]!,
+                                      ],
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.purple.withOpacity(0.3),
+                                        spreadRadius: 1,
+                                        blurRadius: 4,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (_) =>
+                                                  AdminPanelScreen()));
+                                    },
+                                    child: Text("Admin Panel", style: TextStyle(color: Colors.white)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                    ),
+                                  ),
                                 ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  // Determine user status: paid or free
-                                  String userStatus = "free";
-                                  // Treat as paid if admin or account_type is paid or donation_amount > 0
-                                  if ((data['role'] == 'admin') ||
-                                      (data['account_type'] == 'paid') ||
-                                      ((data['donation_amount'] ?? 0.0) >
-                                          0.0)) {
-                                    userStatus = "paid";
-                                  }
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) =>
-                                            data['beatsReady'] == true
-                                                ? HomeScreen()
-                                                : SplashScreen(
-                                                    userStatus: userStatus)),
-                                  );
-                                },
-                                child: Text("Go to Beats"),
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.purple[700]!,
+                                      Colors.purple[500]!,
+                                      Colors.purple[700]!,
+                                    ],
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                  ),
+                                  borderRadius: BorderRadius.circular(4),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.purple.withOpacity(0.3),
+                                      spreadRadius: 1,
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    // Determine user status: paid or free
+                                    String userStatus = "free";
+                                    // Treat as paid if admin or account_type is paid or donation_amount > 0
+                                    if ((data['role'] == 'admin') ||
+                                        (data['account_type'] == 'paid') ||
+                                        ((data['donation_amount'] ?? 0.0) >
+                                            0.0)) {
+                                      userStatus = "paid";
+                                    }
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              data['beatsReady'] == true
+                                                  ? HomeScreen()
+                                                  : SplashScreen(
+                                                      userStatus: userStatus)),
+                                    );
+                                  },
+                                  child: Text("Go to Beats", style: TextStyle(color: Colors.white)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  ),
+                                ),
                               ),
                             ],
                           )

@@ -3,8 +3,8 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'main.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
-import 'home.dart';
 import 'dart:convert';
+import 'home.dart';
 import 'package:flutter/services.dart';
 import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
@@ -384,17 +384,6 @@ class _SplashScreenState extends State<SplashScreen> {
     await zippedFile.delete();
   }
 
-  static const colorizeColors = [
-    Colors.purple,
-    Colors.blue,
-    Colors.yellow,
-    Colors.red,
-  ];
-
-  static const colorizeTextStyle = TextStyle(
-    fontSize: 20.0,
-    fontFamily: 'Horizon',
-  );
 
   Future<void> cleanUpDocumentsDirectory(String path) async {
     Directory documentsDir = Directory(path);
@@ -439,56 +428,146 @@ class _SplashScreenState extends State<SplashScreen> {
                 fit: BoxFit.cover,
               ),
             ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  DefaultTextStyle(
-                    style: const TextStyle(fontSize: 20.0),
-                    child: AnimatedTextKit(
-                      animatedTexts: [
-                        ColorizeAnimatedText(
-                          'Downloading Beats Files of size ~10MB, tap \u{261E} \u{274C} to STOP and Cleanup',
-                          textStyle: colorizeTextStyle,
-                          colors: colorizeColors,
-                        )
-                      ],
-                      isRepeatingAnimation: true,
-                      onTap: () {
-                        cleanUpDocumentsDirectory(dir).then((_) {
-                          exitApp();
-                        });
-                      },
-                    ),
+            child: Stack(
+              children: [
+                // Main content centered
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 200,
+                        child: LinearProgressIndicator(
+                          value: percent / 100,
+                          minHeight: 12,
+                          backgroundColor: Colors.grey[300]!.withOpacity(0.7),
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[700]!),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        '${percent.toStringAsFixed(1)}% Downloaded',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.5),
+                              offset: Offset(1, 1),
+                              blurRadius: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                      DefaultTextStyle(
+                        style: const TextStyle(fontSize: 16.0),
+                        child: AnimatedTextKit(
+                          animatedTexts: [
+                            WavyAnimatedText(
+                              'Kirtan For Life',
+                              textStyle: TextStyle(
+                                color: Colors.purple[200],
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.5),
+                                    offset: Offset(1, 1),
+                                    blurRadius: 2,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          isRepeatingAnimation: true,
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 16),
-                  Container(
-                    width: 200,
-                    child: LinearProgressIndicator(
-                      value: percent / 100,
-                      minHeight: 10,
-                      backgroundColor: Colors.grey[300],
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                    ),
+                ),
+                
+                // Download info and cancel button at bottom
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 40,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Text(
+                          'Downloading beat files (~10MB)',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black,
+                                offset: Offset(1, 1),
+                                blurRadius: 2,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 6,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton.icon(
+                          icon: Icon(Icons.cancel_outlined, size: 20),
+                          label: Text('CANCEL DOWNLOAD'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red[600],
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            elevation: 0,
+                          ),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text('Cancel Download?'),
+                                content: Text('Are you sure you want to cancel the download and exit the app?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text('NO', style: TextStyle(color: Colors.grey[600])),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      cleanUpDocumentsDirectory(dir).then((_) {
+                                        exitApp();
+                                      });
+                                    },
+                                    child: Text('YES', style: TextStyle(color: Colors.red)),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    '${percent.toStringAsFixed(1)}% Downloaded',
-                    style: TextStyle(fontSize: 16, color: Colors.blue),
-                  ),
-                  SizedBox(height: 20),
-                  DefaultTextStyle(
-                    style: const TextStyle(fontSize: 15.0),
-                    child: AnimatedTextKit(
-                      animatedTexts: [
-                        WavyAnimatedText('__/\\o_ Kirtan For Life _o/\\__',
-                            textStyle: TextStyle(color: Colors.purple)),
-                      ],
-                      isRepeatingAnimation: true,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
