@@ -217,7 +217,7 @@ void _showDeepLinkSnackBar(String message) {
           }
 
           final user = FirebaseAuth.instance.currentUser;
-          print("user: $user");
+          //print("user: $user");
           if (user == null) {
             return EmailLinkSignInScreen(beatsReady: _beatsReady);
           }

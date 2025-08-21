@@ -6,7 +6,7 @@ plugins {
 }
 android {
     namespace "dev.suragch.flutter_audio_service_demo"  // Your package name
-    compileSdkVersion 34
+    compileSdkVersion 35
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -24,7 +24,7 @@ android {
     defaultConfig {
         applicationId "dev.suragch.flutter_audio_service_demo"  // Your package name
         minSdkVersion 23
-        targetSdkVersion 34
+        targetSdkVersion 35
         versionCode 1
         versionName "1.0"
     }

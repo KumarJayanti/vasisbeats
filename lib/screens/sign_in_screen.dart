@@ -10,6 +10,7 @@ import '../utils.dart';
 import 'admin_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
 
 class EmailLinkSignInScreen extends StatefulWidget {
   final bool beatsReady;
@@ -550,7 +551,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 backgroundColor: Colors.white,
                                                 child: Icon(Icons.edit,
                                                     size: 16,
-                                                    color: Colors.purple[700]),
+                                                    color: Colors.black),
                                               ),
                                             ),
                                           ),
@@ -590,6 +591,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                                     .bold),
                                                       ),
                                                       IconButton(
+                                                        padding: EdgeInsets.zero,
+                                                        constraints: BoxConstraints(),
                                                         icon: Icon(Icons.edit,
                                                             size: 18,
                                                             color: Colors
@@ -601,10 +604,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                             _isEditing = true;
                                                           });
                                                         },
-                                                        padding:
-                                                            EdgeInsets.zero,
-                                                        constraints:
-                                                            BoxConstraints(),
                                                       ),
                                                     ],
                                                   )
@@ -729,8 +728,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                           bottom: 8.0),
                                                   child: Text("Account Type:",
                                                       style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w500)),
+                                                          fontWeight: FontWeight.bold,
+                                                          color: Colors.green[800])),
                                                 ),
                                                 Text(
                                                   accountType,
@@ -753,8 +752,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                           bottom: 8.0),
                                                   child: Text("Donation:",
                                                       style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w500)),
+                                                          fontWeight: FontWeight.bold,
+                                                          color: Colors.green[800])),
                                                 ),
                                                 Text(
                                                   "\$${donation.toStringAsFixed(1)}",
@@ -809,10 +808,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               final Uri emailLaunchUri = Uri(
                                                 scheme: 'mailto',
                                                 path: 'vasiskirtan@gmail.com',
+                                                query: 'subject=VASIS Donation Receipt - \$$_selectedDonationAmount&body=Hello VASIS Team,%0D%0A%0D%0AI have donated \$$_selectedDonationAmount to support VASIS.%0D%0A%0D%0ATransaction Details:%0D%0A- Amount: \$$_selectedDonationAmount%0D%0A- Date: ${DateTime.now().toString().split(' ')[0]}%0D%0A- Payment Method: [Please specify]%0D%0A- Username: $userName%0D%0A%0D%0AI have attached the transaction screenshot for your reference.%0D%0A%0D%0AThanks,%0D%0A$userName',
                                               );
-                                              if (await canLaunchUrl(
-                                                  emailLaunchUri)) {
-                                                await launchUrl(emailLaunchUri);
+                                              
+                                              if (await canLaunchUrl(emailLaunchUri)) {
+                                                await launchUrl(
+                                                  emailLaunchUri,
+                                                  mode: LaunchMode.externalApplication,
+                                                );
+                                              } else {
+                                                // Fallback: Copy email to clipboard
+                                                await Clipboard.setData(ClipboardData(text: 'vasiskirtan@gmail.com'));
+                                                if (mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text('Email address copied to clipboard')),
+                                                  );
+                                                }
                                               }
                                             },
                                             child: Text(
@@ -909,7 +920,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 ElevatedButton.icon(
                                                   onPressed: () {
                                                     launchUrl(Uri.parse(
-                                                        "https://www.paypal.com/paypalme/nityakishore/${_selectedDonationAmount}USD"));
+                                                        "https://www.paypal.com/paypalme/Girigovardhana/${_selectedDonationAmount}USD"));
                                                   },
                                                   icon: Icon(Icons.payment),
                                                   label:
