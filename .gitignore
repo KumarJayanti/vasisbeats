@@ -8,7 +8,7 @@
 .pub/
 build/
 .metadata
-pubspec.lock
+
 
 # Android NDK build artifacts
 android/app/.cxx/

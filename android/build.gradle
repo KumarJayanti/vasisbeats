@@ -21,13 +21,14 @@ allprojects {
                     }
 
                     defaultConfig {
-                        minSdkVersion 23
+                        minSdkVersion 25
                         targetSdkVersion 34
                         multiDexEnabled true
                     }
                 }
                 
                 project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+                    ext.kotlin_version = '1.8.22'
                     kotlinOptions {
                         jvmTarget = '17'
                     }

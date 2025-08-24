@@ -23,7 +23,7 @@ android {
 
     defaultConfig {
         applicationId "dev.suragch.flutter_audio_service_demo"  // Your package name
-        minSdkVersion 23
+        minSdkVersion flutter.minSdkVersion
         targetSdkVersion 35
         versionCode 1
         versionName "1.0"
