@@ -62,15 +62,21 @@ class UserListItem extends StatefulWidget {
 class _UserListItemState extends State<UserListItem> {
   late TextEditingController _amountController;
   late String _accountType;
+  late String _currency;
   final double donationThreshold = 10.0;
 
   @override
   void initState() {
     super.initState();
     final userData = widget.user.data() as Map<String, dynamic>;
+    
+    // Handle new donation map structure
+    final donationData = userData['donation'] as Map<String, dynamic>?;
     _amountController = TextEditingController(
-      text: userData['donation_amount']?.toString() ?? '0.0',
+      text: donationData?['amount']?.toString() ?? userData['donation_amount']?.toString() ?? '0.0',
     );
+    _currency = donationData?['currency'] ?? 'USD'; // Default to USD
+
     _accountType = userData['account_type'] ?? 'free';
   }
 
@@ -81,17 +87,20 @@ class _UserListItemState extends State<UserListItem> {
   }
 
   Future<void> _updateUser() async {
-    double donation = double.tryParse(_amountController.text) ?? 0.0;
-    // The account type is either what is selected in the dropdown, or 'paid' if donation is high enough
-    String finalType = donation >= donationThreshold ? 'paid' : _accountType;
+    double amount = double.tryParse(_amountController.text) ?? 0.0;
+    String finalType = (amount >= donationThreshold && _currency == 'USD') ? 'paid' : _accountType;
 
     try {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.user.id)
           .update({
-        'donation_amount': donation,
+        'donation': {
+          'amount': amount,
+          'currency': _currency,
+        },
         'account_type': finalType,
+        'donation_amount': FieldValue.delete(), // Remove old field
       });
 
       if (mounted) {
@@ -158,19 +167,38 @@ class _UserListItemState extends State<UserListItem> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.monetization_on_outlined),
-              title: const Text("Donation Amount"),
-              trailing: SizedBox(
-                width: 100,
-                child: TextFormField(
-                  controller: _amountController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  textAlign: TextAlign.center,
-                  decoration: const InputDecoration(
-                    hintText: "0.0",
-                    isDense: true,
-                    border: OutlineInputBorder(),
+              title: const Text("Donation"),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 80,
+                    child: TextFormField(
+                      controller: _amountController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      textAlign: TextAlign.center,
+                      decoration: const InputDecoration(
+                        hintText: "0.0",
+                        isDense: true,
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  DropdownButton<String>(
+                    value: _currency,
+                    items: ['USD', 'INR']
+                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                        .toList(),
+                    onChanged: (newCurrency) {
+                      if (newCurrency != null) {
+                        setState(() {
+                          _currency = newCurrency;
+                        });
+                      }
+                    },
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
