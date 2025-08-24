@@ -569,7 +569,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text("Profile", style: Theme.of(context).textTheme.headlineSmall),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.account_circle, color: Colors.purple[700]),
+                const SizedBox(width: 8),
+                Text(
+                  "Profile",
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(color: Colors.purple[700]),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             const Divider(),
             const SizedBox(height: 8),
@@ -622,12 +635,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               icon: const Icon(Icons.close, color: Colors.red),
                               onPressed: () => setState(() => _isEditing = false)),
                         ])
-                  : IconButton(
-                      icon: Icon(Icons.edit, color: Colors.purple[700]),
-                      onPressed: () {
+                  : GestureDetector(
+                      onTap: () {
                         _nameController.text = userName;
-                        setState(() => _isEditing = true);
+                        setState(() {
+                          _isEditing = true;
+                        });
                       },
+                      child: const CircleAvatar(
+                        radius: 16,
+                        backgroundColor: Colors.purple,
+                        child: Icon(
+                          Icons.edit,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
                     ),
             ),
             ListTile(
@@ -671,9 +694,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Text("Support VasisBeats",
-                  style: Theme.of(context).textTheme.headlineSmall),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.volunteer_activism, color: Colors.pink),
+                const SizedBox(width: 8),
+                Text(
+                  "Support VasisBeats",
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(color: Colors.pink),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             const Divider(),
@@ -773,10 +806,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ElevatedButton.icon(
                       onPressed: () {
                         launchUrl(Uri.parse(
-                            "https://www.paypal.com/paypalme/Girigovardhana/${_selectedDonationAmount}USD"));
+                            "https://www.paypal.com/paypalme/Girigovardhana/$_selectedDonationAmount}USD"));
                       },
                       icon: const Icon(Icons.payment),
                       label: const Text("Donate via PayPal"),
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -798,8 +836,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         ElevatedButton(
           onPressed: () {
@@ -821,8 +859,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: const Text("Go to Beats"),
           style: buttonStyle,
         ),
-        const SizedBox(height: 12),
-        if (isAdmin) ...[
+        if (isAdmin)
           ElevatedButton(
             onPressed: () {
               Navigator.push(
@@ -831,8 +868,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: const Text("Admin Panel"),
             style: buttonStyle,
           ),
-          const SizedBox(height: 12),
-        ],
         ElevatedButton(
           onPressed: () async {
             await FirebaseAuth.instance.signOut();
