@@ -143,7 +143,7 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
     setState(() => _isSendingLink = true);
 
     final actionCodeSettings = ActionCodeSettings(
-      url: 'https://vasis-beats.web.app/emailSignInRedirect',
+      url: 'https://vasis-beats.web.app/__/auth/links',
       handleCodeInApp: true,
       iOSBundleId: 'dev.spiritsoft.flutterAudioServiceDemo',
       androidPackageName: 'dev.suragch.flutter_audio_service_demo',
@@ -850,9 +850,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => widget.beatsReady
-                    ? HomeScreen()
-                    : SplashScreen(userStatus: userStatus),
+                builder: (_) => SplashScreen(userStatus: userStatus),
               ),
             );
           },

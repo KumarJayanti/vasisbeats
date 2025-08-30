@@ -5,8 +5,25 @@ plugins {
     id "com.google.gms.google-services" version '4.4.2' apply false
 }
 android {
+    def keystoreProperties = new Properties()
+    def keystorePropertiesFile = rootProject.file('key.properties')
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    }
+
     namespace "dev.suragch.flutter_audio_service_demo"  // Your package name
     compileSdkVersion 35
+
+    signingConfigs {
+        release {
+            if (keystoreProperties.containsKey('storeFile')) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -25,13 +42,13 @@ android {
         applicationId "dev.suragch.flutter_audio_service_demo"  // Your package name
         minSdkVersion flutter.minSdkVersion
         targetSdkVersion 35
-        versionCode 1
-        versionName "1.0"
+        versionCode flutter.versionCode
+        versionName flutter.versionName
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
         }
     }
 }

@@ -48,7 +48,7 @@
         <data
             android:scheme="https"
             android:host="vasis-beats.web.app"
-            android:pathPrefix="/emailSignInRedirect" />
+            android:pathPrefix="/__/auth/links" />
       </intent-filter>
 
     </activity>

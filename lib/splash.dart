@@ -298,6 +298,8 @@ class _SplashScreenState extends State<SplashScreen> {
     print("toDownloadZip=$toDownloadZip");
     if (toDownloadZip || forceDownload) {
       await _downloadZip();
+      // Add a small delay to ensure files are fully written to disk
+      await Future.delayed(Duration(seconds: 1));
     } else {
       _beatsReady = true;
     }
@@ -412,7 +414,7 @@ class _SplashScreenState extends State<SplashScreen> {
       var fileName = '$_dir/${file.name}';
       if (file.isFile) {
         var outFile = File(fileName);
-        //print('File:: ' + outFile.path);
+        print('Extracted File:: ' + outFile.path);
         outFile = await outFile.create(recursive: true);
         await outFile.writeAsBytes(file.content);
       }

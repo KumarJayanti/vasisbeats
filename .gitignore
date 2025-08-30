@@ -41,3 +41,6 @@ macos/RunnerTests/
 
 # Other
 *.log
+
+# Sensitive credentials
+/android/key.properties
