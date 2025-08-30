@@ -162,13 +162,51 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<bool> _prepareApp() async {
     _dir = (await getApplicationDocumentsDirectory()).path;
-    print("app dir=" + _dir);
+    print("App directory: $_dir");
+    print("Current user status: $_userStatus");
 
     // --- USER STATUS LOGIC START ---
     bool forceDownload = false;
     String? previousStatus = await _readUserStatusFile();
+    print("Previous user status: $previousStatus");
+    
+    // Check if vasis folder exists and user is paid but metadata.json doesn't have do_taal_slow genre
+    final vasisDir = Directory('$_dir/vasis');
+    bool vasisDirExists = await vasisDir.exists();
+    if (vasisDirExists && _userStatus == "paid") {
+      print("Vasis directory exists and user is paid");
+      final metadataFile = File('$_dir/vasis/metadata.json');
+      if (await metadataFile.exists()) {
+        try {
+          final metadataContent = await metadataFile.readAsString();
+          final hasDoTaalSlow = metadataContent.contains('"genre": "do_taal_slow"');
+          print("Metadata check - has do_taal_slow: $hasDoTaalSlow");
+          
+          if (!hasDoTaalSlow) {
+            print("do_taal_slow genre not found in metadata. Forcing download...");
+            await _deleteVasisFolderAndMeta();
+            forceDownload = true;
+          }
+        } catch (e) {
+          print('Error reading metadata.json: $e');
+          print('Forcing download due to metadata read error');
+          await _deleteVasisFolderAndMeta();
+          forceDownload = true;
+        }
+      } else {
+        print("metadata.json not found in vasis directory");
+      }
+    } else if (!vasisDirExists) {
+      forceDownload = true;
+      print("Vasis directory does not exist, will download fresh content");
+
+    } else {
+      print("Vasis directory exists, but user is not paid or other condition not met");
+    }
+    
     if (previousStatus == null || previousStatus != _userStatus) {
       // Status changed or first run
+      print('User status changed from $previousStatus to $_userStatus. Cleaning up old data...');
       await _deleteVasisFolderAndMeta();
       await _writeUserStatusFile(_userStatus);
       forceDownload = true;

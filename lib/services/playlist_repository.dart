@@ -46,12 +46,18 @@ class DemoPlaylist extends PlaylistRepository {
 
     print('**********************');
     //print(data);
-    songsNew = data as List;
+    songsNew = (data as List).map((song) {
+      if (song is Map && song['category'] == null) {
+        song['category'] = song['genre'];
+        song['genre'] = 'teen_taal_slow';
+      }
+      return song;
+    }).toList();
     //
     //print(songsNew.length);
   }
 
-  Future<void> _waitForMetadata(String path, {int retries = 10}) async {
+  Future<void> _waitForMetadata(String path, {int retries = 30}) async {
     final metadataFile = File('$path/metadata.json');
     if (await metadataFile.exists()) {
       print("_waitForMetadata metadata.json found");
@@ -59,7 +65,7 @@ class DemoPlaylist extends PlaylistRepository {
     while (retries-- > 0) {
       if (await metadataFile.exists()) return;
       print("_waitForMetadata metadata.json not found, retrying...");
-      await Future.delayed(Duration(milliseconds: 200));
+      await Future.delayed(Duration(milliseconds: 500));
     }
     throw Exception('metadata.json did not appear in time');
   }
