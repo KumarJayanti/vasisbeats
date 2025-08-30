@@ -279,7 +279,6 @@ class Playlist extends StatelessWidget {
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
-                    subtitle: Text(mediaItem.album ?? ''),
                     trailing: isSelected
                         ? Icon(Icons.speaker, color: Colors.green.shade700)
                         : Icon(Icons.queue_music_rounded, color: Colors.purple.shade700),
