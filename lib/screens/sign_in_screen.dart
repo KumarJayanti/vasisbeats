@@ -147,8 +147,7 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
       handleCodeInApp: true,
       iOSBundleId: 'dev.spiritsoft.flutterAudioServiceDemo',
       androidPackageName: 'dev.suragch.flutter_audio_service_demo',
-      androidInstallApp: false,
-      androidMinimumVersion: '21',
+      androidInstallApp: false
     );
 
     try {

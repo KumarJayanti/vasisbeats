@@ -7,6 +7,7 @@
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 		<string>applinks:vasis-beats.web.app</string>
+		<string>applinks:vasis-beats.firebaseapp.com</string>
 	</array>
 </dict>
 </plist>
