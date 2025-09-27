@@ -121,16 +121,7 @@ Example:
 
 ---
 
-## 2) Firebase Project Config (Admin SDK)
-- Set the Mobile Links domain to Hosting Domain (not Dynamic Links).
-- Use the Admin SDK `projectConfigManager.updateProjectConfig` with:
-  - `mobileLinksConfig.domain = "HOSTING_DOMAIN"`
-
-This instructs Firebase Auth to align links with your Hosting domain.
-
----
-
-## 3) Client code changes (Flutter)
+## 2) Client code changes (Flutter)
 
 ### Generate email link
 Where: `lib/screens/sign_in_screen.dart`
@@ -154,7 +145,7 @@ Where: `lib/splash.dart`
 
 ---
 
-## 4) Platform specifics
+## 3) Platform specifics
 
 ### Android (deterministic)
 - `android/app/src/main/AndroidManifest.xml` intent-filters should include:
@@ -220,8 +211,6 @@ TODO: Attach macOS demo video (optional). Include console logs when link is deli
 ## 6) Troubleshooting checklist
 - Hosting
   - AASA/assetlinks.json valid JSON, served as `application/json` (no redirect).
-- Admin SDK
-  - `mobileLinksConfig.domain = "HOSTING_DOMAIN"`.
 - Flutter
   - `ActionCodeSettings.linkDomain = 'auth.spiritlightsoft.com'`.
   - Early lifecycle link listener + reconstruction fallback for `finishSignIn` URL.
@@ -253,7 +242,6 @@ TODO: Attach macOS demo video (optional). Include console logs when link is deli
   - Cause: Old Dynamic Links setup still present in the Firebase project.
   - Fix:
     - In Firebase console, delete any Dynamic Links you no longer use.
-    - Confirm project config uses Hosting domain via Admin SDK: `mobileLinksConfig.domain = "HOSTING_DOMAIN"`.
     - Client must use `ActionCodeSettings.linkDomain = 'auth.spiritlightsoft.com'` (not the deprecated `dynamicLinkDomain`).
 
 - **iOS/macOS association not applied to the installed build**
