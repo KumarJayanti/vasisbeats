@@ -2,7 +2,7 @@ name: flutter_audio_service_demo
 description: Companion project for tutorial on audio_service plugin.
 publish_to: 'none'
 
-version: 4.0.0+16
+version: 4.0.3+22
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
@@ -48,6 +48,7 @@ dependencies:
   cloud_functions: ^5.5.2
   firebase_storage: ^12.4.7
   app_links:  ^6.4.0
+  connectivity_plus: ^6.1.1
 dev_dependencies:
   flutter_lints: ^3.0.2
   flutter_test:

@@ -11,6 +11,10 @@ import 'admin_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
+
+// NEW: cross-platform app/universal links (Android, iOS, macOS)
+import 'package:app_links/app_links.dart';
 
 // Helper widget for the AppBar title
 Widget _buildAppBarTitle() {
@@ -44,9 +48,15 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
   bool _linkSent = false;
   final _auth = FirebaseAuth.instance;
 
+  // NEW: app/universal links plumbing
+  late final AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSub;
+  bool _linksReady = false;
+
   @override
   void initState() {
     super.initState();
+
     // If user is already signed in, redirect them to the profile screen.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_auth.currentUser != null) {
@@ -58,17 +68,92 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
         );
       }
     });
+
+    // NEW: start listening for incoming links (Android/iOS/macOS)
+    _initDeepLinks();
+
+    // Keep macOS paste fallback until you verify desktop universal links
     _checkForStoredLink();
   }
 
   @override
   void dispose() {
+    _linkSub?.cancel(); // NEW: stop listening to link stream
     _emailController.dispose();
     _linkController.dispose();
     super.dispose();
   }
 
+  // NEW: initialize app/universal link handling
+  Future<void> _initDeepLinks() async {
+    if (_linksReady) return;
+    _linksReady = true;
+
+    _appLinks = AppLinks();
+
+    // 1) Cold start: app was opened via link
+    try {
+      final initial = await _appLinks.getInitialLink();
+      if (initial != null) {
+        _handleIncomingLink(initial.toString());
+      }
+    } catch (_) {
+      // ignore
+    }
+
+    // 2) Warm stream: links arriving while app is running/foregrounded
+    _linkSub = _appLinks.uriLinkStream.listen((uri) {
+      if (uri != null) _handleIncomingLink(uri.toString());
+    }, onError: (_) {
+      // ignore
+    });
+  }
+
+  // NEW: central link handler → completes sign-in in-app
+  Future<void> _handleIncomingLink(String link) async {
+    try {
+      if (!_auth.isSignInWithEmailLink(link)) return;
+
+      setState(() => _isSigningIn = true);
+
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('email_for_signin');
+
+      if (email == null || email.isEmpty) {
+        // Safety: prompt if we somehow don't have the email cached
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter your email to complete sign-in.')),
+        );
+        return;
+      }
+
+      final cred =
+          await _auth.signInWithEmailLink(email: email, emailLink: link);
+      await createOrUpdateUserInFirestore(cred.user!);
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                ProfileScreen(beatsReady: widget.beatsReady)),
+      );
+    } catch (e) {
+      debugPrint('❌ signInWithEmailLink failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign-in failed. Try again.')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSigningIn = false);
+      }
+    }
+  }
+
   Future<void> _checkForStoredLink() async {
+    // This was your macOS paste workaround. Keep for one release; remove after you verify links arrive on desktop.
     if (!Platform.isMacOS) return;
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -84,6 +169,7 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
 
         await prefs.remove('macos_email_link');
         await prefs.remove('email_for_signin');
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -119,6 +205,7 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
           await _auth.signInWithEmailLink(email: email, emailLink: link);
       await createOrUpdateUserInFirestore(cred.user!);
 
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -142,8 +229,12 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
     final email = _emailController.text.trim();
     setState(() => _isSendingLink = true);
 
+    // IMPORTANT: ensure these IDs match your actual bundles/packages
     final actionCodeSettings = ActionCodeSettings(
-      url: 'https://vasis-beats.web.app/__/auth/links',
+      // This is the URL the user will be redirected to after signing in.
+      url: 'https://auth.spiritlightsoft.com/finishSignIn',
+      // This is the domain of the link itself.
+      linkDomain: 'auth.spiritlightsoft.com',
       handleCodeInApp: true,
       iOSBundleId: 'dev.spiritsoft.flutterAudioServiceDemo',
       androidPackageName: 'dev.suragch.flutter_audio_service_demo',
@@ -259,7 +350,9 @@ class _EmailLinkSignInScreenState extends State<EmailLinkSignInScreen> {
                           Padding(
                             padding: const EdgeInsets.only(top: 12),
                             child: Text(
-                              "✅ Email sent. Please check your inbox.",
+                              Platform.isIOS
+                                  ? "✅ Email sent. Tap the link and the app will open automatically."
+                                  : "✅ Email sent. Tap the link to return to the app.",
                               style: TextStyle(color: Colors.green[400]),
                               textAlign: TextAlign.center,
                             ),
@@ -769,34 +862,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Column(
                   children: [
                     DropdownButton<int>(
-                      value:
-                          _selectedDonationAmount,
-                      dropdownColor:
-                          Colors.purple[800],
-                      style: TextStyle(
+                      value: _selectedDonationAmount,
+                      dropdownColor: Colors.purple[800],
+                      style: const TextStyle(
                           color: Colors.black,
                           fontSize: 14),
-                      icon: Icon(
+                      icon: const Icon(
                           Icons.arrow_drop_down,
                           color: Colors.black),
                       items: _donationAmounts
                           .map((int amount) {
-                        return DropdownMenuItem<
-                            int>(
+                        return DropdownMenuItem<int>(
                           value: amount,
-                          child: Text(
-                              '\$$amount',
-                              style: TextStyle(
-                                  fontSize:
-                                      14)),
+                          child: Text('\$$amount',
+                              style: const TextStyle(fontSize: 14)),
                         );
                       }).toList(),
-                      onChanged:
-                          (int? newValue) {
+                      onChanged: (int? newValue) {
                         if (newValue != null) {
                           setState(() {
-                            _selectedDonationAmount =
-                                newValue;
+                            _selectedDonationAmount = newValue;
                           });
                         }
                       },
@@ -888,3 +973,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+

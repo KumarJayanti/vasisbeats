@@ -41,6 +41,26 @@
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
 
+      <!-- auth.spiritlightsoft.com -->
+      <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data
+            android:scheme="https"
+            android:host="auth.spiritlightsoft.com"
+            android:pathPrefix="/__/auth/" />
+      </intent-filter>
+      <!-- Explicitly handle the final redirect URL path used by email link sign-in -->
+      <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data
+            android:scheme="https"
+            android:host="auth.spiritlightsoft.com"
+            android:pathPrefix="/finishSignIn" />
+      </intent-filter>
       <intent-filter android:autoVerify="true">
         <action android:name="android.intent.action.VIEW" />
         <category android:name="android.intent.category.DEFAULT" />

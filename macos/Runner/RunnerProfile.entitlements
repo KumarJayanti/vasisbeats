@@ -20,5 +20,9 @@
 	<array>
 		<string>$(AppIdentifierPrefix)dev.spiritsoft.flutterAudioServiceDemo</string>
 	</array>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:auth.spiritlightsoft.com</string>
+	</array>
 </dict>
 </plist>

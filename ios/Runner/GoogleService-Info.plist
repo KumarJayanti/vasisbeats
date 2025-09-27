@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>971357659383-vq98f5ivlngp7e43qud65n2ri8jro0ps.apps.googleusercontent.com</string>
+	<string>971357659383-evc5j8r3paoi0fpcdvhnt6ph09nopjnu.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.971357659383-vq98f5ivlngp7e43qud65n2ri8jro0ps</string>
+	<string>com.googleusercontent.apps.971357659383-evc5j8r3paoi0fpcdvhnt6ph09nopjnu</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>971357659383-bh1igoqage3d14uibeham3p7ehve75ih.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>dev.spiritsoft.flutterAudioServiceDemo</string>
+	<string>com.spiritsoft.FlutterAudio</string>
 	<key>PROJECT_ID</key>
 	<string>vasis-beats</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:971357659383:ios:a764be80950ce422f873f2</string>
+	<string>1:971357659383:ios:13698d552fe86715f873f2</string>
 </dict>
 </plist>

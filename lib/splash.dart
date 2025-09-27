@@ -10,7 +10,10 @@ import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_functions/cloud_functions.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore for user profile
+import 'package:app_links/app_links.dart'; // For universal links
+import 'dart:async'; // For StreamSubscription
+import 'package:shared_preferences/shared_preferences.dart'; // To get email
 
 class SplashScreen extends StatefulWidget {
   final String userStatus;
@@ -26,6 +29,10 @@ class _SplashScreenState extends State<SplashScreen> {
   bool _beatsReady = false;
   bool _metadataMissing = false;
   String _dir = "";
+
+  // --- UNIVERSAL LINK HANDLING ---
+  StreamSubscription<Uri>? _linkSub;
+  final _appLinks = AppLinks();
 
   // --- USER STATUS LOGIC ---
   String _userStatus = ""; // TODO: Set this based on your actual user logic
@@ -44,16 +51,129 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     _userStatus = widget.userStatus;
+    _initLinkHandling(); // Check for incoming links first
+  }
+
+  @override
+  void dispose() {
+    _linkSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initLinkHandling() async {
+    // Try to process an initial link (if app was opened by one)
+    try {
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri == null) {
+        print('[Links] No initial link');
+      } else {
+        print('[Links] Initial link: ' + initialUri.toString());
+      }
+      if (initialUri != null) {
+        final success = await _handleIncomingLink(initialUri.toString());
+        if (success) return; // If sign-in is successful, stop here.
+      }
+    } catch (e) {
+      print('Deep Link Error (initial): $e');
+    }
+
+    // Listen for links while the app is running
+    _linkSub = _appLinks.uriLinkStream.listen((uri) async {
+      final uriStr = uri.toString();
+      print('[Links] Stream link: ' + uriStr);
+      await _handleIncomingLink(uriStr);
+    }, onError: (err) {
+      print('Deep Link Error (stream): $err');
+    });
+
+    // If no link was processed, continue with normal startup
     FirebaseAuth.instance.authStateChanges().listen((user) async {
       if (user != null) {
-        // Wait until the auth token is ready
-        final idtoken = await user.getIdToken(true);
-        //print('✅ Firebase ID token: $idtoken');
         _startBeatsCheck();
       } else {
+        // If no user and no link, we might need to navigate to sign-in
+        // For now, let's assume _startBeatsCheck handles this.
         print("❌ No signed-in user available yet.");
+        _startBeatsCheck(); // Or navigate to sign in screen
       }
     });
+  }
+
+  Future<bool> _handleIncomingLink(String link) async {
+    final _auth = FirebaseAuth.instance;
+    print('[Links] Handling link: ' + link);
+    String effectiveLink = link;
+    bool valid = _auth.isSignInWithEmailLink(effectiveLink);
+
+    // Fallback: if it's the redirected finishSignIn URL, rebuild the action link
+    if (!valid) {
+      try {
+        final uri = Uri.parse(link);
+        final qp = uri.queryParameters;
+        final hasParams = qp.containsKey('oobCode') && qp.containsKey('mode');
+        if (hasParams) {
+          final host = uri.host; // e.g., auth.spiritlightsoft.com
+          final newUri = Uri(
+            scheme: uri.scheme,
+            host: host,
+            path: '/__/auth/action',
+            queryParameters: {
+              ...qp,
+            },
+          );
+          effectiveLink = newUri.toString();
+          print('[Links] Reconstructed action link: ' + effectiveLink);
+          valid = _auth.isSignInWithEmailLink(effectiveLink);
+        }
+      } catch (e) {
+        print('[Links] Fallback reconstruction failed: $e');
+      }
+    }
+
+    if (valid) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final email = prefs.getString('email_for_signin');
+
+        if (email != null) {
+          final userCredential = await _auth.signInWithEmailLink(email: email, emailLink: effectiveLink);
+          await _createOrUpdateUserInFirestore(userCredential.user!);
+          
+          if (mounted && !_navigated) {
+            _navigated = true;
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => HomeScreen()),
+            );
+          }
+          return true; // Indicate success
+        }
+      } catch (e) {
+        print('Error signing in with email link: $e');
+      }
+    }
+    return false; // Indicate failure
+  }
+
+  Future<void> _createOrUpdateUserInFirestore(User user) async {
+    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final snapshot = await docRef.get();
+
+    final adminDoc = await FirebaseFirestore.instance.collection('admins').doc(user.uid).get();
+    final isAdmin = adminDoc.exists;
+    final userEmail = user.email ?? "";
+    if (!snapshot.exists) {
+      await docRef.set({
+        'userId': user.uid,
+        'userName': userEmail.split('@').first,
+        'email': user.email ?? '',
+        'role': isAdmin ? 'admin' : 'user',
+        'account_type': 'free',
+        'donation_amount': 0.0,
+        'created_at': FieldValue.serverTimestamp(),
+        'photo_url': 'https://storage.googleapis.com/vasis/default_profile.png',
+      });
+    }
   }
 
   void _startBeatsCheck() {
@@ -104,6 +224,12 @@ class _SplashScreenState extends State<SplashScreen> {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) {
     print("⚠️ No Firebase user signed in, using fallback: $fallbackUrl");
+    return fallbackUrl;
+  }
+
+  // Check internet connectivity before making network request
+  if (!await _hasInternetConnection()) {
+    print("⚠️ No internet connection, using fallback: $fallbackUrl");
     return fallbackUrl;
   }
 
@@ -225,6 +351,23 @@ class _SplashScreenState extends State<SplashScreen> {
       await _initBeatsReady(forceDownload: true);
       return true;
     }
+    
+    // Check if we have internet connection before proceeding
+    bool hasInternet = await _hasInternetConnection();
+    if (!hasInternet) {
+      print('No internet connection detected in _prepareApp');
+      // Check if we have existing beats data
+      bool hasExistingData = await _hasExistingBeatsData();
+      if (!hasExistingData) {
+        print('No internet and no existing beats data - navigating to profile page');
+        if (!_navigated) {
+          _navigated = true;
+          Navigator.of(context).pushReplacementNamed('/profile');
+        }
+        return false;
+      }
+    }
+    
     bool needToDownloadZip = await _needToDownloadZip();
     if (!_navigated && !needToDownloadZip) {
       _beatsReady = true;
@@ -232,7 +375,24 @@ class _SplashScreenState extends State<SplashScreen> {
           .updateProgress(1.0, _dir);
       return true;
     }
-    await _initBeatsReady();
+    
+    try {
+      await _initBeatsReady();
+    } catch (e) {
+      print('Error in _initBeatsReady: $e');
+      // If initialization fails due to no internet and no existing data, navigate to profile page
+      if (e.toString().contains('No internet connection') || e.toString().contains('Failed to download required files')) {
+        print('Cannot initialize beats due to connectivity issues - navigating to profile page');
+        if (!_navigated) {
+          _navigated = true;
+          Navigator.of(context).pushReplacementNamed('/profile');
+        }
+        return false;
+      } else {
+        // For other types of errors, rethrow them
+        rethrow;
+      }
+    }
     return true;
   }
 
@@ -243,20 +403,37 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<bool> _needToDownloadZip() async {
     print("Entry needToDownloadZip.....");
+    
+    // Check internet connectivity first
+    bool hasInternet = await _hasInternetConnection();
+    if (!hasInternet) {
+      print('No internet connection in _needToDownloadZip - assuming no download needed');
+      return false;
+    }
+    
     bool fileExists = await File('$_dir/last_updated.txt').exists();
     String currentDate;
     bool toDownloadZip = true;
+    
     if (fileExists) {
       print("last_updated file already exists");
       File current = await File('$_dir/last_updated.txt');
       currentDate = await current.readAsString();
       print("currentDate=" + currentDate);
-      var lastUpdated =
-          await _downloadFile(_last_updated, _localUpdatedFileName);
-      String latestDate = await lastUpdated.readAsString();
-      print("latestDate=" + latestDate);
-      if (latestDate.compareTo(currentDate) == 0) {
-        print("latestDate date is same as currentDate, no download needed..");
+      
+      try {
+        var lastUpdated = await _downloadFile(_last_updated, _localUpdatedFileName);
+        String latestDate = await lastUpdated.readAsString();
+        print("latestDate=" + latestDate);
+        if (latestDate.compareTo(currentDate) == 0) {
+          print("latestDate date is same as currentDate, no download needed..");
+          toDownloadZip = false;
+        }
+      } catch (e) {
+        print('Failed to check for updates: $e');
+        // If we can't check for updates due to network issues, assume no download needed
+        // and use existing files
+        print('Assuming no download needed due to connectivity issues');
         toDownloadZip = false;
       }
     }
@@ -273,27 +450,61 @@ class _SplashScreenState extends State<SplashScreen> {
      check if existing download date is equal to the one downloaded, if equal then skip download and set beatsready
      if new then : remove existing, download zip and set beatsready
     */
+    
+    // Check internet connectivity first
+    bool hasInternet = await _hasInternetConnection();
+    if (!hasInternet && !forceDownload) {
+      print('No internet connection in _initBeatsReady - checking for existing data');
+      bool hasExistingData = await _hasExistingBeatsData();
+      if (hasExistingData) {
+        print('Using existing beats data');
+        _beatsReady = true;
+        return;
+      } else {
+        print('No internet and no existing beats data - cannot initialize beats');
+        throw Exception('No internet connection and no existing beats data available');
+      }
+    }
+    
     bool fileExists = await File('$_dir/last_updated.txt').exists();
     String currentDate;
     bool toDownloadZip = false;
+    
     if (fileExists) {
       print("last_updated file already exists");
       File current = await File('$_dir/last_updated.txt');
       currentDate = await current.readAsString();
       print("currentDate=" + currentDate);
-      var lastUpdated =
-          await _downloadFile(_last_updated, _localUpdatedFileName);
-      String latestDate = await lastUpdated.readAsString();
-      print("latestDate=" + latestDate);
-      if (latestDate.compareTo(currentDate) > 0) {
-        print("latestDate date is greater than currentDate");
-        toDownloadZip = true;
+      
+      try {
+        var lastUpdated = await _downloadFile(_last_updated, _localUpdatedFileName);
+        String latestDate = await lastUpdated.readAsString();
+        print("latestDate=" + latestDate);
+        if (latestDate.compareTo(currentDate) > 0) {
+          print("latestDate date is greater than currentDate");
+          toDownloadZip = true;
+        }
+      } catch (e) {
+        print('Failed to check for updates: $e');
+        // If we can't check for updates, assume no download needed and use existing data
+        print('Using existing data due to connectivity issues');
+        _beatsReady = true;
+        return;
       }
     } else {
       print("last_updated file does not exist");
-      var lastUpdated =
-          await _downloadFile(_last_updated, _localUpdatedFileName);
-      toDownloadZip = true;
+      if (!hasInternet && !forceDownload) {
+        print('No internet to download last_updated file - cannot proceed');
+        throw Exception('No internet connection and no existing last_updated file');
+      }
+      
+      try {
+        var lastUpdated = await _downloadFile(_last_updated, _localUpdatedFileName);
+        toDownloadZip = true;
+      } catch (e) {
+        print('Failed to download last_updated file: $e');
+        throw Exception('Failed to download required files: $e');
+      }
     }
     print("toDownloadZip=$toDownloadZip");
     if (toDownloadZip || forceDownload) {
@@ -311,11 +522,74 @@ class _SplashScreenState extends State<SplashScreen> {
     print("_metadataMissing=$_metadataMissing");
   }
 
+  // Helper method to check if existing beats data is available
+  Future<bool> _hasExistingBeatsData() async {
+    try {
+      // Check if the vasis directory exists
+      final vasisDir = Directory('$_dir/vasis');
+      if (!await vasisDir.exists()) {
+        return false;
+      }
+      
+      // Check if metadata.json exists
+      final metadataFile = File('$_dir/vasis/metadata.json');
+      if (!await metadataFile.exists()) {
+        return false;
+      }
+      
+      // Check if there are any beat files
+      final beatFiles = await vasisDir.list().where((entity) => 
+        entity is File && (entity.path.endsWith('.mp3') || entity.path.endsWith('.wav'))).take(5).toList();
+      
+      return beatFiles.isNotEmpty;
+    } catch (e) {
+      print('Error checking existing beats data: $e');
+      return false;
+    }
+  }
+
+  // Helper method to check internet connectivity
+  Future<bool> _hasInternetConnection() async {
+    try {
+      // Try to reach a reliable server with a timeout
+      final response = await http.get(
+        Uri.parse('https://www.google.com'),
+      ).timeout(const Duration(seconds: 5));
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Internet connectivity check failed: $e');
+      return false;
+    }
+  }
+
   Future<File> _downloadFile(String url, String fileName) async {
-    var req = await http.Client().get(Uri.parse(url));
-    var file = File('$_dir/$fileName');
-    //By default writeAsBytes creates the file for writing and truncates the file if it already exists
-    return file.writeAsBytes(req.bodyBytes);
+    // Check internet connectivity first
+    if (!await _hasInternetConnection()) {
+      print('No internet connection. Skipping download of $fileName');
+      // Return existing file if it exists, or throw an exception
+      var existingFile = File('$_dir/$fileName');
+      if (await existingFile.exists()) {
+        print('Using existing file: $fileName');
+        return existingFile;
+      }
+      throw Exception('No internet connection and no existing file found for $fileName');
+    }
+    
+    try {
+      var req = await http.Client().get(Uri.parse(url));
+      var file = File('$_dir/$fileName');
+      //By default writeAsBytes creates the file for writing and truncates the file if it already exists
+      return file.writeAsBytes(req.bodyBytes);
+    } catch (e) {
+      print('Failed to download $fileName: $e');
+      // Return existing file if it exists
+      var existingFile = File('$_dir/$fileName');
+      if (await existingFile.exists()) {
+        print('Using existing file after download failure: $fileName');
+        return existingFile;
+      }
+      rethrow;
+    }
   }
 
   //--------------
@@ -326,29 +600,57 @@ class _SplashScreenState extends State<SplashScreen> {
     final fileName =
         isPaidFilePath ? 'vasis-sounds-paid.zip' : 'vasis-sounds.zip';
     final fallbackUrl = isPaidFilePath ? _paidZipPath : _zipPath;
-    //print("_downloadZippedFile : fileName=$fileName");
-    final url = await _getDownloadUrl(useSignedUrl, fallbackUrl, fileName);
-    //print("_downloadZippedFile : url=$url");
-    final req = await http.Client().send(http.Request('GET', Uri.parse(url)));
-    final file = File('$_dir/$fileName');
-    //print("Directory _dir= $_dir");
-
-    final responseStream = req.stream;
-    final totalBytes = req.contentLength ?? 0;
-    var bytesDownloaded = 0;
-    final fileSink = file.openWrite();
     
-    await for (final chunk in responseStream) {
-      bytesDownloaded += chunk.length;
-      fileSink.add(chunk);
-      //print("_downloadZippedFile : bytesDownloaded=$bytesDownloaded");
-      final progress = bytesDownloaded / totalBytes;
-      Provider.of<DownloadProgress>(context, listen: false)
-          .updateProgress(progress, _dir);
+    // Check internet connectivity first
+    if (!await _hasInternetConnection()) {
+      print('No internet connection. Skipping download of $fileName');
+      // Return existing file if it exists, or throw an exception
+      var existingFile = File('$_dir/$fileName');
+      if (await existingFile.exists()) {
+        print('Using existing file: $fileName');
+        Provider.of<DownloadProgress>(context, listen: false)
+            .updateProgress(1.0, _dir);
+        return existingFile;
+      }
+      throw Exception('No internet connection and no existing file found for $fileName');
     }
-    //print("_downloadZippedFile : totalBytes=$totalBytes");
-    await fileSink.close();
-    return file;
+    
+    try {
+      //print("_downloadZippedFile : fileName=$fileName");
+      final url = await _getDownloadUrl(useSignedUrl, fallbackUrl, fileName);
+      //print("_downloadZippedFile : url=$url");
+      final req = await http.Client().send(http.Request('GET', Uri.parse(url)));
+      final file = File('$_dir/$fileName');
+      //print("Directory _dir= $_dir");
+
+      final responseStream = req.stream;
+      final totalBytes = req.contentLength ?? 0;
+      var bytesDownloaded = 0;
+      final fileSink = file.openWrite();
+      
+      await for (final chunk in responseStream) {
+        bytesDownloaded += chunk.length;
+        fileSink.add(chunk);
+        //print("_downloadZippedFile : bytesDownloaded=$bytesDownloaded");
+        final progress = bytesDownloaded / totalBytes;
+        Provider.of<DownloadProgress>(context, listen: false)
+            .updateProgress(progress, _dir);
+      }
+      //print("_downloadZippedFile : totalBytes=$totalBytes");
+      await fileSink.close();
+      return file;
+    } catch (e) {
+      print('Failed to download $fileName: $e');
+      // Return existing file if it exists
+      var existingFile = File('$_dir/$fileName');
+      if (await existingFile.exists()) {
+        print('Using existing file after download failure: $fileName');
+        Provider.of<DownloadProgress>(context, listen: false)
+            .updateProgress(1.0, _dir);
+        return existingFile;
+      }
+      rethrow;
+    }
   }
 
   //--------------
