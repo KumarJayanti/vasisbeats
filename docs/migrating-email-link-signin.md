@@ -173,7 +173,7 @@ Where: `lib/splash.dart`
 
 ---
 
-## 5) Theory vs Practice (attach screenshots/video)
+## 5) Theory vs Practice 
 - Android: Tapping link opens app directly; sign‑in completes immediately.
 - iOS: App opens; sometimes Safari remains foregrounded. Switching back shows you’re signed in.
 - macOS: “Open in App” focuses the app; link delivery may require retry with the app already open. The Splash handler reconstructs the action URL when necessary.
@@ -182,29 +182,17 @@ Where: `lib/splash.dart`
 
 Android flow (video):
 
-![Android email link sign-in](../images/blog/android-email-link-signin.png)
+![Android email link sign-in](https://drive.google.com/file/d/1UhT10xHMXxioGYEgbRDMAc5qfVqR06Vp/view?usp=sharing)
 
-```
-TODO: Attach Android demo video (mp4) showing tap → app open → sign-in complete.
-```
 
-iOS flow (screenshots):
+iOS flow (video):
 
-![iOS link tap](../images/blog/ios-link-tap.png)
-![iOS app foregrounded](../images/blog/ios-app-foregrounded.png)
+![iOS link tap](https://drive.google.com/file/d/1XcgTUGOdFuT6cfTJ4Krx5rGcbn4ts6cY/view?usp=sharing)
 
-```
-TODO: Attach iOS demo video (optional). Note the Safari foreground nuance.
-```
 
-macOS flow (screenshots):
+macOS flow (video):
 
-![macOS open in app banner](../images/blog/macos-open-in-app.png)
-![macOS app focused](../images/blog/macos-app-focused.png)
-
-```
-TODO: Attach macOS demo video (optional). Include console logs when link is delivered.
-```
+![macOS link tap] (https://drive.google.com/file/d/1uHhHOZFp4txuzHL5nVMmHVJpR9TC719Q/view?usp=sharing)
 
 ---
 
@@ -297,4 +285,6 @@ Migrating off Dynamic Links is about aligning three layers:
 - Hosting files and correct headers (AASA/assetlinks.json)
 - OS association and delivery (entitlements, App/Universal Links, plugin forwarding)
 
-Android is deterministic once SHA‑256 and intent‑filters are correct. iOS/macOS enforce stronger association rules and sometimes cache prior decisions; removing legacy domains, resetting Safari Website Data, and ensuring entitlements/profiles are correct improves reliability significantly.
+Android is deterministic once SHA‑256 and intent‑filters are correct. iOS enforces stronger association rules and sometimes cache prior decisions; removing legacy domains, resetting Safari Website Data, and ensuring entitlements/profiles are correct improves reliability significantly.
+
+**macOS Limitation**: While we successfully achieved URL association (the app is recognized and can be opened via the link), we were unable to get the URL delivered to the app for completing the sign-in process. The association works correctly, but the URL forwarding mechanism to complete the Firebase Auth flow remains unresolved on macOS.
