@@ -182,17 +182,17 @@ Where: `lib/splash.dart`
 
 Android flow (video):
 
-![Android email link sign-in](https://drive.google.com/file/d/1UhT10xHMXxioGYEgbRDMAc5qfVqR06Vp/view?usp=sharing)
+[Android email link sign-in](https://drive.google.com/file/d/1UhT10xHMXxioGYEgbRDMAc5qfVqR06Vp/view?usp=sharing)
 
 
 iOS flow (video):
 
-![iOS link tap] (https://drive.google.com/file/d/1XcgTUGOdFuT6cfTJ4Krx5rGcbn4ts6cY/view?usp=sharing)
+[iOS link tap](https://drive.google.com/file/d/1XcgTUGOdFuT6cfTJ4Krx5rGcbn4ts6cY/view?usp=sharing)
 
 
 macOS flow (video):
 
-![macOS link tap] (https://drive.google.com/file/d/1uHhHOZFp4txuzHL5nVMmHVJpR9TC719Q/view?usp=sharing)
+[macOS link tap](https://drive.google.com/file/d/1uHhHOZFp4txuzHL5nVMmHVJpR9TC719Q/view?usp=sharing)
 
 ---
 
