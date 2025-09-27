@@ -1,9 +1,20 @@
 # Flutter/Dart specific
 .dart_tool/
+.firebase/
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
-pubspec.lock
+.pub-cache/
+.pub/
+build/
+.metadata
+
+
+# Android NDK build artifacts
+android/app/.cxx/
+
+# iOS Swift Package Manager cache
+ios/**/xcshareddata/swiftpm/
 
 # Build outputs
 build/
@@ -20,6 +31,8 @@ macos/.DS_Store
 
 # macOS specific
 .DS_Store
+.metadata
+macos/RunnerTests/
 
 # IDE specific
 .idea/
@@ -28,3 +41,6 @@ macos/.DS_Store
 
 # Other
 *.log
+
+# Sensitive credentials
+/android/key.properties

@@ -14,6 +14,20 @@ Future<AudioHandler> initAudioService() async {
 }
 
 class MyAudioHandler extends BaseAudioHandler {
+  Future<void> clearQueue() async {
+    // Clear the player playlist
+    try {
+      await _player.stop();
+      await _player.setAudioSource(ConcatenatingAudioSource(children: []));
+    } catch (e) {
+      print('[MyAudioHandler] Error clearing player audio source: $e');
+    }
+    // Clear the handler queue
+    queue.add([]);
+    mediaItem.add(null);
+    //print('[MyAudioHandler] clearQueue: queue and player cleared.');
+  }
+
   final _player = AudioPlayer();
   final _playlist = ConcatenatingAudioSource(children: []);
 
@@ -103,19 +117,44 @@ class MyAudioHandler extends BaseAudioHandler {
       final sequence = sequenceState?.effectiveSequence;
       if (sequence == null || sequence.isEmpty) return;
       final items = sequence.map((source) => source.tag as MediaItem);
+      //print('[MyAudioHandler::_listenForSequenceStateChanges] Adding queue of length: ${items.length}');
       queue.add(items.toList());
     });
   }
 
   @override
-  Future<void> addQueueItems(List<MediaItem> mediaItems) async {
-    // manage Just Audio
-    final audioSource = mediaItems.map(_createAudioSource);
-    _playlist.addAll(audioSource.toList());
+  Future<dynamic> customAction(String name,
+      [Map<String, dynamic>? extras]) async {
+    //print('[MyAudioHandler] customAction CALLED with name: $name');
+    //print('1.Clearing queue...');
+    switch (name) {
+      case 'clearQueue':
+        //print('2.Clearing queue...');
+        queue.add([]);
+        mediaItem.add(null);
+        playbackState.add(playbackState.value.copyWith(
+          processingState: AudioProcessingState.idle,
+          playing: false,
+        ));
+        //print('Queue cleared');
+        return 'Queue cleared';
+        break;
+      case 'dispose':
+        await _player.dispose();
+        super.stop();
+        break;
+      default:
+        throw UnimplementedError('Unknown custom action: $name');
+    }
+  }
 
-    // notify system
-    final newQueue = queue.value..addAll(mediaItems);
-    queue.add(newQueue);
+  @override
+  Future<void> addQueueItems(List<MediaItem> mediaItems) async {
+    // REPLACE the player playlist with new items
+    final newAudioSources = mediaItems.map(_createAudioSource).toList();
+    await _player.stop();
+    await _player.setAudioSource(ConcatenatingAudioSource(children: newAudioSources));
+    // Do NOT manually update queue here; let _listenForSequenceStateChanges handle it.
   }
 
   @override
@@ -196,13 +235,14 @@ class MyAudioHandler extends BaseAudioHandler {
     }
   }
 
+  /*
   @override
   Future customAction(String name, [Map<String, dynamic>? extras]) async {
     if (name == 'dispose') {
       await _player.dispose();
       super.stop();
     }
-  }
+  }*/
 
   @override
   Future<void> stop() async {

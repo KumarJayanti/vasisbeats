@@ -1,0 +1,10 @@
+
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "dev.suragch.flutter_audio_service_demo",
+    "sha256_cert_fingerprints":
+    ["A1:E2:D4:BD:F6:89:21:BF:C9:49:5B:92:1C:07:10:82:8D:4E:63:66:19:27:6F:AD:BF:5D:4D:28:8D:22:41:4C"]
+  }
+}]

@@ -11,8 +11,13 @@ import 'package:get_it/get_it.dart';
 GetIt getIt = GetIt.instance;
 
 Future<void> setupServiceLocator() async {
+  print('[ServiceLocator] Setting up service locator...');
+  
   // services
-  getIt.registerSingleton<AudioHandler>(await initAudioService());
+  final handler = await initAudioService();
+  print('[ServiceLocator] Handler runtimeType: ${handler.runtimeType}');
+  getIt.registerSingleton<AudioHandler>(handler);
+  //getIt.registerSingleton<AudioHandler>(await initAudioService());
   getIt.registerLazySingleton<PlaylistRepository>(() => DemoPlaylist());
 
   // page state
