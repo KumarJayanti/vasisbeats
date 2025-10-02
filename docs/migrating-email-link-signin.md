@@ -178,7 +178,7 @@ Where: `lib/splash.dart`
 - iOS: App opens; sometimes Safari remains foregrounded. Switching back shows you’re signed in.
 - macOS: “Open in App” focuses the app; link delivery may require retry with the app already open. The Splash handler reconstructs the action URL when necessary.
 
-### Demo assets (placeholders)
+### PasswordLess Email Link SignIn Demo 
 
 Android flow (video):
 
