@@ -1,6 +1,6 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
-import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
@@ -21,39 +21,52 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-      apiKey: "AIzaSyBo7cHoleVLzP_TuxBqLOCQS_79SeZs5rg",
-      authDomain: "vasis-beats.firebaseapp.com",
-      projectId: "vasis-beats",
-      storageBucket: "vasis-beats.firebasestorage.app",
-      messagingSenderId: "971357659383",
-      appId: "1:971357659383:web:69f2d93014447d40f873f2");
+  static FirebaseOptions get web {
+    final env = dotenv.env;
+    return FirebaseOptions(
+      apiKey: env['FIREBASE_WEB_API_KEY']!,
+      authDomain: env['FIREBASE_AUTH_DOMAIN']!,
+      projectId: env['FIREBASE_PROJECT_ID']!,
+      storageBucket: env['FIREBASE_WEB_STORAGE_BUCKET']!,
+      messagingSenderId: env['FIREBASE_MESSAGING_SENDER_ID']!,
+      appId: env['FIREBASE_WEB_APP_ID']!,
+    );
+  }
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: "AIzaSyCiNSykhomSxEdwu8xs7LTJER33C-jF1h0",
-    appId: "1:971357659383:android:063a7f908c71c920f873f2",
-    messagingSenderId: "971357659383",
-    projectId: 'vasis-beats',
-    storageBucket: 'vasis-beats.appspot.com',
-  );
+  static FirebaseOptions get android {
+    final env = dotenv.env;
+    return FirebaseOptions(
+      apiKey: env['FIREBASE_ANDROID_API_KEY']!,
+      appId: env['FIREBASE_ANDROID_APP_ID']!,
+      messagingSenderId: env['FIREBASE_MESSAGING_SENDER_ID']!,
+      projectId: env['FIREBASE_PROJECT_ID']!,
+      storageBucket: env['FIREBASE_STORAGE_BUCKET']!,
+    );
+  }
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyB6UkA1jZ8zAtXJNBJJZ51F6VL4dx2xozI',
-    appId: '1:971357659383:ios:a764be80950ce422f873f2',
-    messagingSenderId: '971357659383',
-    projectId: 'vasis-beats',
-    storageBucket: 'vasis-beats.appspot.com',
-    iosClientId: '971357659383-vq98f5ivlngp7e43qud65n2ri8jro0ps.apps.googleusercontent.com',
-    iosBundleId: 'dev.spiritsoft.flutterAudioServiceDemo',
-  );
+  static FirebaseOptions get ios {
+    final env = dotenv.env;
+    return FirebaseOptions(
+      apiKey: env['FIREBASE_IOS_API_KEY']!,
+      appId: env['FIREBASE_IOS_APP_ID']!,
+      messagingSenderId: env['FIREBASE_MESSAGING_SENDER_ID']!,
+      projectId: env['FIREBASE_PROJECT_ID']!,
+      storageBucket: env['FIREBASE_STORAGE_BUCKET']!,
+      iosClientId: env['FIREBASE_IOS_CLIENT_ID']!,
+      iosBundleId: env['FIREBASE_IOS_BUNDLE_ID']!,
+    );
+  }
 
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyB6UkA1jZ8zAtXJNBJJZ51F6VL4dx2xozI',
-    appId: '1:971357659383:ios:13698d552fe86715f873f2',
-    messagingSenderId: '971357659383',
-    projectId: 'vasis-beats',
-    storageBucket: 'vasis-beats.appspot.com',
-    iosClientId: '971357659383-evc5j8r3paoi0fpcdvhnt6ph09nopjnu.apps.googleusercontent.com',
-    iosBundleId: 'com.spiritsoft.FlutterAudio',
-  );
+  static FirebaseOptions get macos {
+    final env = dotenv.env;
+    return FirebaseOptions(
+      apiKey: env['FIREBASE_MACOS_API_KEY']!,
+      appId: env['FIREBASE_MACOS_APP_ID']!,
+      messagingSenderId: env['FIREBASE_MESSAGING_SENDER_ID']!,
+      projectId: env['FIREBASE_PROJECT_ID']!,
+      storageBucket: env['FIREBASE_STORAGE_BUCKET']!,
+      iosClientId: env['FIREBASE_IOS_CLIENT_ID']!,
+      iosBundleId: env['FIREBASE_IOS_BUNDLE_ID']!,
+    );
+  }
 }

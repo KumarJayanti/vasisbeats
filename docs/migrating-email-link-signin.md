@@ -12,7 +12,7 @@
   - macOS: app focuses on “Open in App”; link delivery can be inconsistent across OS versions.
 
 ## Why migrate off Dynamic Links?
-- Firebase Dynamic Links (FDL) are no longer recommended for email link sign‑in.
+- Firebase Dynamic Links (FDL) are [deprecated](https://firebase.google.com/support/dynamic-links-faq) and no longer recommended for email link sign‑in.
 - Apple requires App/Universal Links tied directly to your domain via site association (AASA), not via dynamic link intermediaries.
 - Firebase now supports this via “Hosting domain” configuration and client-side `linkDomain`.
 
