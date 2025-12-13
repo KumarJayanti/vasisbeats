@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'page_manager.dart';
 import 'services/service_locator.dart';
 import 'package:catcher/catcher.dart';
@@ -10,7 +11,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'screens/sign_in_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, exit;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app_links/app_links.dart';
@@ -18,13 +19,28 @@ import 'package:app_links/app_links.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Load environment variables
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    debugPrint('Error loading .env file: $e');
+    // In production, you might want to handle this differently
+    // For now, we'll just print the error and continue
+  }
+
   if (Firebase.apps.isEmpty) {
-    if (Platform.isMacOS || Platform.isIOS) {
-      await Firebase.initializeApp(); // auto-loads from plist
-    } else {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
+    try {
+      if (Platform.isMacOS || Platform.isIOS) {
+        await Firebase.initializeApp(); // auto-loads from plist
+      } else {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error initializing Firebase: $e');
+      // Handle the error appropriately for your app
+      rethrow;
     }
   }
 

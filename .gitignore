@@ -44,3 +44,23 @@ macos/RunnerTests/
 
 # Sensitive credentials
 /android/key.properties
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Firebase
+**/firebase-debug.log
+**/firebase-debug.*.log
+
+# Local configuration files
+**/local.properties
+**/local.properties.*
+
+# VS Code settings
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
